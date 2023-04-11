@@ -1,16 +1,16 @@
 # Project log book
 
-**3rd Apr 2023**\
+## **3rd Apr 2023**
 Requesting for being a member of project on SURP\
 Creating UPPMAX account
 
-**5th Apr 2023**\
+## **5th Apr 2023**
 Meeting with Rachel for Uppmax tutorial and giving initial tasks for project:
 1. Find and download Wolbacchia and Stammerula reference genomes on NCBI to your working directory
 2. Write up a list of the different bacterial reference genomes you found and plan to use and send it to me
 3. Start working through the initial parts of the workflow from Anne Duplouy
 
-**10th Apr 2023**\
+## **10th Apr 2023**
 Following Anna Doplouy tutorial for *Screening host genomic project for Wolbachia infections*\
 The tutorial can be find [here](https://zenodo.org/record/7799140#.ZC1hrBVByUt)\
 Working directory in **uppmax**
@@ -55,5 +55,35 @@ cp *.fasta ref_gene
 conda install -c "bioconda/label/cf201901" sra-tools #This version is 2.9.1
 mkdir sra_download
 prefetch -O sra_download/ SRR4341246 # Currently having error running this but maybe is the different in version of sra-tools
+#Trying version 3.0.0 as the paper mentioned but still encouter error
 ```
 
+## **11th Apr 2023**
+Trying to fix the error with sra-tools. Should not use the packages install through conda. Do not know why it did not have the latest version (3.0.2) but only 2.9.0.\
+Run it by downloading directly from [github](https://github.com/ncbi/sra-tools/wiki/02.-Installing-SRA-Toolkit), it worked!
+```bash
+mkdir sra_download
+mkdir sra_fastq
+mkdir tmp
+# Run prefetch
+# Try to find Tephritis conura on NCBI Sequence Read Archive but there is no result so I used the sample organism in the paper Delias oraia 
+# Download SRA-formatted sequencefiles along with the necessary data
+prefetch -O sra_download/ SRR4341246
+
+# fasterq-dump can be used to convert the SRA-formated sequence file to FASTQ format
+# A temporary directory with the -t flag, this directory is used to storeany temporary files, which are deleted upon download completion
+#  --split-3 option is used to separate paired-end reads into two FASTQ files, and the --skip-technical option filters out reads with no biological significanc
+fasterq-dump --split-3 --skip-technical -O sra_fastq -t tmp sra_download/SRR4341246
+
+
+# Data quality assessment
+# Install fastqc
+conda install -c bioconda fastqc  #Ver 0.12.1
+
+# Run FastQC
+fastqc -o fastqc_out sra_fastq/SRR4341246_1.fastq # fastqc.sh in scripts directory
+fastqc -o fastqc_out sra_fastq/SRR4341246_2.fastq # fastqc2.sh in scripts directory
+
+java -jar packages/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 10 sra_fastq/SRR4341246_1.fastq sra_fastq/SRR4341246_2.fastq \
+trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_unpaired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq trimm_out/SRR4341246_unpaired_R2.fastq ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36
+```
