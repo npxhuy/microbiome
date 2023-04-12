@@ -81,9 +81,24 @@ fasterq-dump --split-3 --skip-technical -O sra_fastq -t tmp sra_download/SRR4341
 conda install -c bioconda fastqc  #Ver 0.12.1
 
 # Run FastQC
+mkdir fastqc_out
+
 fastqc -o fastqc_out sra_fastq/SRR4341246_1.fastq # fastqc.sh in scripts directory
 fastqc -o fastqc_out sra_fastq/SRR4341246_2.fastq # fastqc2.sh in scripts directory
 
+# Run Trimmomatic
+mkdir trimm_out
+
 java -jar packages/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 10 sra_fastq/SRR4341246_1.fastq sra_fastq/SRR4341246_2.fastq \
-trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_unpaired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq trimm_out/SRR4341246_unpaired_R2.fastq ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36
+trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_unpaired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq trimm_out/SRR4341246_unpaired_R2.fastq ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36 # trim.sh in scripts directory
+```
+## **12th Apr 2023**
+Ask Rachel about installing Kraken 2
+```bash
+# Trying to run kraken2 today
+To make things easier for you, you may want to copy/symlink the following
+files into a directory in your PATH:
+  /crex/proj/snic2020-6-222/Projects/Tconura/working/Huy/packages/kraken_2/kraken2
+  /crex/proj/snic2020-6-222/Projects/Tconura/working/Huy/packages/kraken_2/kraken2-build
+  /crex/proj/snic2020-6-222/Projects/Tconura/working/Huy/packages/kraken_2/kraken2-inspect
 ```
