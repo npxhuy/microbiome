@@ -1,5 +1,6 @@
 # Project log book
-
+Working directory in **uppmax**
+>  /proj/snic2022-6-377/Projects/Tconura/working/Huy
 ## **3rd Apr 2023**
 Requesting for being a member of project on SURP\
 Creating UPPMAX account
@@ -93,12 +94,54 @@ java -jar packages/Trimmomatic-0.39/trimmomatic-0.39.jar PE -threads 10 sra_fast
 trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_unpaired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq trimm_out/SRR4341246_unpaired_R2.fastq ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36 # trim.sh in scripts directory
 ```
 ## **12th Apr 2023**
-Ask Rachel about installing Kraken 2
-```bash
-# Trying to run kraken2 today
+Ask Rachel about installing Kraken 2.
+Trying to run kraken2 today, installing kraken2 and some info for later use.\
 To make things easier for you, you may want to copy/symlink the following
 files into a directory in your PATH:
   /crex/proj/snic2020-6-222/Projects/Tconura/working/Huy/packages/kraken_2/kraken2
   /crex/proj/snic2020-6-222/Projects/Tconura/working/Huy/packages/kraken_2/kraken2-build
   /crex/proj/snic2020-6-222/Projects/Tconura/working/Huy/packages/kraken_2/kraken2-inspect
+
+Actually do not need this anymore because now I can use the module on Uppmax directly.\
+Busy the whole day so did not do anything productive today but have a meeting with Rachel at 1pm for discussion, and I would call it a day.
+
+## **13th Apr 2023**
+```bash
+# Run kraken2, with script kraken1.sh
+
+# For wollbachia genome
+# Load module
+module load bioinfo-tools Kraken2/2.1.2-20211210-4f648f5
+
+# Run build data base by kraken
+kraken2-build --download-taxonomy --db wolbachia_ref
+
+for ref in wolbachia_gene/ref_gene/*.fna; do 
+kraken2-build --add-to-library $ref --db wolbachia_ref
+done
+
+kraken2-build --build --db wolbachia_ref
+
+# For stammerula genome (in kraken2.sh)
+kraken2-build --download-taxonomy --db stammerula_ref
+
+for ref in stammerula_gene/ref_gene/*.fasta; do 
+kraken2-build --add-to-library $ref --db stammerula_ref
+done
+
+kraken2-build --build --db stammerula_ref
+
+# Run Kraken for wolbachia
+kraken2 –db wolbachia_ref --threads 4 --report-zero-counts --use-names --confidence 0.05 --paired trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq --output kraken_out/SRR4341246_kraken2_results.out --report kraken_out/SRR4341246_kraken2_report
+
+# Run Kraken for stammurela
+kraken2 –db stammerula_ref --threads 4 --report-zero-counts --use-names --confidence 0.05 --paired trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq --output kraken_out2/SRR4341246_kraken2_results.out --report kraken_out2/SRR4341246_kraken2_report
 ```
+Raise question: cant we just separate that long line of code into new lines with \\ because when I did that to make the code look nicer it have error. For example:
+```bash
+kraken2 –db wolbachia_ref --threads 4 --report-zero-counts --use-names --confidence 0.05 --paired \
+trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq \
+--output kraken_out/SRR4341246_kraken2_results.out \
+--report kraken_out/SRR4341246_kraken2_report
+```
+This will resulted in error, saying find the classified and unclassified % but cant find the directory for the output
