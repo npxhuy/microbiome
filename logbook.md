@@ -146,3 +146,39 @@ trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq \
 ```
 This will resulted in error, saying find the classified and unclassified % but cant find the directory for the output
 ## **17th Apr 2023**
+Because MetaPhlAN on Uppmax is 3.0 and in the pipeline by Anna she used ver 4.0 so I manually install the [4.0 version](https://github.com/biobakery/MetaPhlAn/wiki/MetaPhlAn-4).
+```bash
+# Clone the directory
+git clone https://github.com/biobakery/MetaPhlAn.git
+
+# cd to the folder, and install
+pip install .
+
+# Download the clade markers and database
+metaphlan --install
+
+# Run metaphlan, install data base, run on cleaned reads
+metaphlan --install --bowtie2db metaphlan/db #in metaphlan.sh 
+
+# Original code
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq –o metaphlan/profiled_SRR4341246.txt #in metaphlan2.sh
+# The second command always resulted in error saying "metaphlan: error: unrecognized arguments: –o" although 
+
+# Therefore I will use the module install on UPPMAX instead and see how it will go
+
+# Still resulted in same error, removing the flag -o then the program run normally, but potentially wont have the output file.
+
+# Modified code 1 (same error) metaphlan3.sh
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq metaphlan/profiled_SRR4341246.txt --bowtie2db metaphlan/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq –o metaphlan/profiled_SRR4341246.txt
+
+# Modified code 2 metaphlan4.sh 
+# New error
+# No MetaPhlAn BowTie2 database found (--index option)!
+# Expecting location metaphlan/db/mpa_v31_CHOCOPhlAn_201901
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq metaphlan/profiled_SRR4341246.txt --bowtie2db metaphlan/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq
+
+# Modified code 3 metaphlan5.sh 
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq
+
+# Keep failing i'm about to give up
+```
