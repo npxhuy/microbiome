@@ -137,7 +137,7 @@ kraken2 –db wolbachia_ref --threads 4 --report-zero-counts --use-names --confi
 # Run Kraken for stammurela
 kraken2 –db stammerula_ref --threads 4 --report-zero-counts --use-names --confidence 0.05 --paired trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq --output kraken_out2/SRR4341246_kraken2_results.out --report kraken_out2/SRR4341246_kraken2_report
 ```
-Raise question: cant we just separate that long line of code into new lines with \\ because when I did that to make the code look nicer it have error. For example:
+Raise question: cant we just separate that long line of code into new lines with \\ because when I did that to make the code look nicer it have error. For example:        
 ```bash
 kraken2 –db wolbachia_ref --threads 4 --report-zero-counts --use-names --confidence 0.05 --paired \
 trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq \
@@ -145,3 +145,4 @@ trimm_out/SRR4341246_paired_R1.fastq trimm_out/SRR4341246_paired_R2.fastq \
 --report kraken_out/SRR4341246_kraken2_report
 ```
 This will resulted in error, saying find the classified and unclassified % but cant find the directory for the output
+## **17th Apr 2023**
