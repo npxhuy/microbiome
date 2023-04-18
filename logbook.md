@@ -158,10 +158,10 @@ pip install .
 metaphlan --install
 
 # Run metaphlan, install data base, run on cleaned reads
-metaphlan --install --bowtie2db metaphlan/db #in metaphlan.sh 
+metaphlan --install --bowtie2db metaphlan4/db #in metaphlan.sh 
 
 # Original code
-metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq –o metaphlan/profiled_SRR4341246.txt #in metaphlan2.sh
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan4/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq –o metaphlan/profiled_SRR4341246.txt #in metaphlan2.sh
 # The second command always resulted in error saying "metaphlan: error: unrecognized arguments: –o" although 
 
 # Therefore I will use the module install on UPPMAX instead and see how it will go
@@ -180,5 +180,7 @@ metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fa
 # Modified code 3 metaphlan5.sh 
 metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq
 
-# Keep failing i'm about to give up
+# Keep failing i'm about to give up, Rachel if you are reading this i'm so dead
+
+# Trying to install metaphlan4 from conda from Uppmax, but it take so long to install so I'll go to sleep and let it run
 ```
