@@ -161,7 +161,7 @@ metaphlan --install
 metaphlan --install --bowtie2db metaphlan4/db #in metaphlan.sh 
 
 # Original code
-metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan4/db --bowtie2out metaphlan/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq –o metaphlan/profiled_SRR4341246.txt #in metaphlan2.sh
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan4/db --bowtie2out metaphlan4/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq –o metaphlan4/profiled_SRR4341246.txt #in metaphlan2.sh
 # The second command always resulted in error saying "metaphlan: error: unrecognized arguments: –o" although 
 
 # Therefore I will use the module install on UPPMAX instead and see how it will go
@@ -183,4 +183,35 @@ metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fa
 # Keep failing i'm about to give up, Rachel if you are reading this i'm so dead
 
 # Trying to install metaphlan4 from conda from Uppmax, but it take so long to install so I'll go to sleep and let it run
+```
+## **17th Apr 2023**
+Try to install metaphlan 4.0.2 through conda on uppmax, do bowtie2 and other stuffs in the pipeline
+```bash
+module load conda
+conda install metaphlan=4.0.2
+# Created database
+metaphlan --install --bowtie2db metaphlan4/db
+# Run metaphlan
+metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan4/db/mpa_v31_CHOCOPhlAn_201901 --bowtie2out metaphlan4/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq
+# Note: the output flags was remove so this code run normally
+# The output was written in the output file that we state in SBATCH flag
+# the --bowtie2db flag kinda rerun or re-download the whole database like the previous code
+
+# Run bowtie2
+module load bioinfo-tools bowtie2/2.3.5.1
+
+# Merged fna file
+cat wolbachia_gene/ref_gene/*.fna > wolref_merged.fna
+
+# Run bowtie2 build to build index
+bowtie2-build wolbachia_gene/ref_gene/wolref_merged.fna wolref_genomes_db
+
+# Run bowtie
+bowtie2 --very-sensitive-local -p 10 --no-unal -x wolref_genomes_db -1 trimm_out/SRR4341246_paired_R1.fastq -2 trimm_out/SRR4341246_paired_R2.fastq -S SRR4341246.sam
+
+# Run using bam and sam tools
+
+samtools view -h -F 4 -b -S SRR4341246.sam > SRR4341246_mapped.bam
+samtools sort -n SRR4341246_mapped.bam -o SRR4341246_mapped_sorted.bam 
+bamToFastq -i SRR4341246_mapped_sorted.bam -fq SRR4341246_mapped_1.fastq -fq2 SRR4341246_mapped_2.fastq
 ```
