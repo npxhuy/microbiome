@@ -184,16 +184,18 @@ metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fa
 
 # Trying to install metaphlan4 from conda from Uppmax, but it take so long to install so I'll go to sleep and let it run
 ```
-## **17th Apr 2023**
+## **18th Apr 2023**
 Try to install metaphlan 4.0.2 through conda on uppmax, do bowtie2 and other stuffs in the pipeline
 ```bash
 module load conda
 conda install metaphlan=4.0.2
-# Created database
+# Created database - metaphlan.sh
 metaphlan --install --bowtie2db metaphlan4/db
-# Run metaphlan
+# Run metaphlan - metaphlan3.sh
+# Note: still encounter same problem when using the -o flag for the output, so the -o was remove
+# Modification in the flag --bowtie2db
 metaphlan trimm_out/SRR4341246_paired_R1.fastq,trimm_out/SRR4341246_paired_R2.fastq --bowtie2db metaphlan4/db/mpa_v31_CHOCOPhlAn_201901 --bowtie2out metaphlan4/SRR4341246.bowtie2.bz2 -t rel_ab_w_read_stats --nproc 10 --input_type fastq
-# Note: the output flags was remove so this code run normally
+# Finally the code run normally
 # The output was written in the output file that we state in SBATCH flag
 # the --bowtie2db flag kinda rerun or re-download the whole database like the previous code
 
@@ -203,14 +205,13 @@ module load bioinfo-tools bowtie2/2.3.5.1
 # Merged fna file
 cat wolbachia_gene/ref_gene/*.fna > wolref_merged.fna
 
-# Run bowtie2 build to build index
+# Run bowtie2 build to build index - bowtie.sh
 bowtie2-build wolbachia_gene/ref_gene/wolref_merged.fna wolref_genomes_db
 
-# Run bowtie
+# Run bowtie - bowtie2.sh
 bowtie2 --very-sensitive-local -p 10 --no-unal -x wolref_genomes_db -1 trimm_out/SRR4341246_paired_R1.fastq -2 trimm_out/SRR4341246_paired_R2.fastq -S SRR4341246.sam
 
-# Run using bam and sam tools
-
+# Run using bam and sam tools - sam.sh
 samtools view -h -F 4 -b -S SRR4341246.sam > SRR4341246_mapped.bam
 samtools sort -n SRR4341246_mapped.bam -o SRR4341246_mapped_sorted.bam 
 bamToFastq -i SRR4341246_mapped_sorted.bam -fq SRR4341246_mapped_1.fastq -fq2 SRR4341246_mapped_2.fastq
