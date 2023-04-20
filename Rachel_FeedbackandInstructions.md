@@ -28,7 +28,7 @@ UPPMAX provides prebuilt Kraken 2 / Bracken refseq indices from https://benlangm
 We are interested in the PlusPF database (bacteria, viral, plasmid, human1, UniVec_Core, protozoa & fungi) 
 `$KRAKEN2_DB_PREBUILT/k2_pluspf_20221209`    
 
-## Background next steps
+## Writing/theory next steps
 
 Thank you for reading and commenting in Anne's tutorial! I really appreciate it (and I am sure she will, too!)
 
