@@ -22,6 +22,12 @@ Everything is looking pretty good. I would like you to start transitioning to ap
   - This time, rather than using your own wolbachia database, use the PlusPF prebuilt database: `$KRAKEN2_DB_PREBUILT/k2_pluspf_20221209` or `/sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/`
     - Learn more from `module spider Kraken2` and let me know if you have questions! this has been frustrating to get working in the past!
 
+### Background: Prebuilt databases available on Uppmax
+UPPMAX provides prebuilt Kraken 2 / Bracken refseq indices from https://benlangmead.github.io/aws-indexes/k2. This module defines the environment variable $KRAKEN2_DB_PREBUILT enables access to these databases; see the 'Local name' column for what to provide to the --db option.
+
+We are interested in the PlusPF database (bacteria, viral, plasmid, human1, UniVec_Core, protozoa & fungi) 
+`$KRAKEN2_DB_PREBUILT/k2_pluspf_20221209`    
+
 ## Background next steps
 
 Thank you for reading and commenting in Anne's tutorial! I really appreciate it (and I am sure she will, too!)
