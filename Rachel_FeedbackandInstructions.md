@@ -13,13 +13,13 @@ Everything is looking pretty good. I would like you to start transitioning to ap
 
 2. Create a set of **test** data by subsampling the fastq files from one sample (your choice).
   - I recommend doing this in its own directory so you have all of your test reads separate. 
-  - Most of the samples have three read pairs (six total fastq files), and you should subsampe all of them. We want to be able to test how the results combine at the end of the pipeline. 
+  - Many of the samples have three read pairs (six total fastq files). For the sample you choose, you should subsampe all of the read pairs. We want to be able to test how the results combine at the end of the pipeline. 
   - This is a good tool for subsampling: https://github.com/lh3/seqtk, `subsample`
 
 3. For your **test** data, write a script (or several scripts) to run fastqc and and trim the reads. 
 
 4. Set up a script to run Kraken2 on your trimmed **test** fastq files. 
-  - This time, rather than creating your own wolbachia database, use the PlusPF prebuilt database: `$KRAKEN2_DB_PREBUILT/k2_pluspf_20221209` or `/sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/`
+  - This time, rather than using your own wolbachia database, use the PlusPF prebuilt database: `$KRAKEN2_DB_PREBUILT/k2_pluspf_20221209` or `/sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/`
     - Learn more from `module spider Kraken2` and let me know if you have questions! this has been frustrating to get working in the past!
 
 ## Background next steps
