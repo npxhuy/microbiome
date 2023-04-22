@@ -1,6 +1,6 @@
 # Project log book
 Working directory in **uppmax**
->  /proj/snic2022-6-377/Projects/Tconura/working/Huy
+>  /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
 ## **3rd Apr 2023**
 Requesting for being a member of project on SURP\
 Creating UPPMAX account
@@ -216,3 +216,41 @@ samtools view -h -F 4 -b -S SRR4341246.sam > SRR4341246_mapped.bam
 samtools sort -n SRR4341246_mapped.bam -o SRR4341246_mapped_sorted.bam 
 bamToFastq -i SRR4341246_mapped_sorted.bam -fq SRR4341246_mapped_1.fastq -fq2 SRR4341246_mapped_2.fastq
 ```
+
+## **20-26th Apr 2023**
+Tasks:
+```bash
+# These directory are made
+mkdir subsampling
+mkdir wgs_sample
+```
+1. Create soft link - DONE
+```bash
+# These codes are run in wgs_sample directory
+# Create an id.txt file that contains all the folder name
+cut -f 1 /proj/snic2022-6-377/Projects/Tconura/working/Rachel/popgen_Tconura/allpops.Tcon.txt > id.txt
+
+# 1. Make diretory as the in the txt file, cd to folder
+# 2. Loop through the *.lst file, that contains the directory the fastq.gz
+# 3. Create soft link of fastq.gz inside that folder
+# 4. Cd out, repeat the loop
+# Note: could write an if to not read the md5 so we dont have to remove later but it's easier to remove than thinking about writing a extra condition code so what's the point
+# Note2: if this code did not work for you, try to mkdir first, and then run the code again without the mkdir $folder
+cat id.txt | while read folder; do main=$(echo $folder | cut -d \_ -f 1) ; mkdir $folder; cd $folder ; cat /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/$main/$folder.lst | while read dir; do ln -s /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/$main/$dir ; done ; cd .. ; done
+
+# The .lst file contains the md5 that is not useful in this situation so remove it
+rm */*.md5
+```
+2. Subsampling for a test sample L002_R1 with L002_R2 for example and so on (a test sample) - ON GOING
+```bash
+# This code was run in the wgs_sample directory
+module load bioinfo-tools seqtk/1.2-r101; ls | while read folder; do cd $folder; ls | while read file; do seqtk sample -s100 $file 10000 > ../../subsampling/$folder/sub_$file ; done ; cd .. ; done
+```
+3. trimm and fastqc
+4. kraken2 on test data
+5. Readme file for deadline
+
+Working directory from now
+> /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
+
+
