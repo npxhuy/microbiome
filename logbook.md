@@ -221,12 +221,12 @@ bamToFastq -i SRR4341246_mapped_sorted.bam -fq SRR4341246_mapped_1.fastq -fq2 SR
 Tasks:
 ```bash
 # These directory are made
-mkdir subsampling
-mkdir wgs_sample
+mkdir sub_samp
+mkdir raw_wgs
 ```
 1. Create soft link - DONE
 ```bash
-# These codes are run in wgs_sample directory
+# These codes are run in raw_wgs directory
 # Create an id.txt file that contains all the folder name
 cut -f 1 /proj/snic2022-6-377/Projects/Tconura/working/Rachel/popgen_Tconura/allpops.Tcon.txt > id.txt
 
@@ -241,16 +241,29 @@ cat id.txt | while read folder; do main=$(echo $folder | cut -d \_ -f 1) ; mkdir
 # The .lst file contains the md5 that is not useful in this situation so remove it
 rm */*.md5
 ```
-2. Subsampling for a test sample L002_R1 with L002_R2 for example and so on (a test sample) - ON GOING
+2. Subsampling (a test sample) - DONE
 ```bash
-# This code was run in the wgs_sample directory
-module load bioinfo-tools seqtk/1.2-r101; ls | while read folder; do cd $folder; ls | while read file; do seqtk sample -s100 $file 10000 > ../../subsampling/$folder/sub_$file ; done ; cd .. ; done
+# This code was run in the wgs_sample directory - sub_samp.sh scripts
+# 1. Load module
+# 2. ls to have the list of every folder, while loop to cd to folder
+# 3. In folder, ls and loop through every file and seqtk that file
+# 4. Put the sub sampling file in the desire directory and cd out the folder
+module load bioinfo-tools seqtk/1.2-r101; ls | while read folder; do cd $folder; ls | while read file; do seqtk sample -s100 $file 10000 > ../../sub_samp/$folder/sub_$file ; done ; cd .. ; done
 ```
-3. trimm and fastqc
+3. fastqc + trimm - ON GOING
+```bash
+# This code was run in the sub_samp directory - fastqc.sh scripts
+module load bioinfo-tools FastQC/0.11.9
+# 1. Ls of folder and cd in each folder
+# 2. Fastqc for every file, -o flag for output directory
+# Note: in fastqc directory, all the folders were mkdir before
+ls | while read folder; do cd $folder; fastqc -o ../../fastqc/$folder *.fastq.gz ; cd ..; done
+```
+
 4. kraken2 on test data
 5. Readme file for deadline
 
 Working directory from now
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
 
-
+ 
