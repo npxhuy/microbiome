@@ -223,6 +223,8 @@ Tasks:
 # These directory are made
 mkdir sub_samp
 mkdir raw_wgs
+mkdir fastqc
+mkdir trimm
 ```
 1. Create soft link - DONE
 ```bash
@@ -252,18 +254,72 @@ module load bioinfo-tools seqtk/1.2-r101; ls | while read folder; do cd $folder;
 ```
 3. fastqc + trimm - ON GOING
 ```bash
+# FASTQC
+# After sub sampling, fastqc did not recognise the gz file, so have to remove the .gz in the file
+ls | while read folder; do cd $folder; ls | while read file; do name=$(echo "$file" | sed 's/\.gz$//') ; cp $file $name ; done ; cd .. ; done
+rm */*.gz
 # This code was run in the sub_samp directory - fastqc.sh scripts
 module load bioinfo-tools FastQC/0.11.9
 # 1. Ls of folder and cd in each folder
 # 2. Fastqc for every file, -o flag for output directory
 # Note: in fastqc directory, all the folders were mkdir before
 ls | while read folder; do cd $folder; fastqc -o ../../fastqc/$folder *.fastq.gz ; cd ..; done
-```
 
+# TRIMMOMATIC
+# Load module
+module load bioinfo-tools trimmomatic/0.39
+
+# 1. Loop through each folder
+# 2. In every folder, ls to have all the file, paste - - to have pair of files in one line
+# 3. Loop through each pair, cut and set and other stuff to have the name of the output for trimmomatic
+# 4. Do trimmomatic for each pair and put the output in trimm folder
+# 5. cd out when finish with one folder
+ls | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
+```
 4. kraken2 on test data
 5. Readme file for deadline
 
-Working directory from now
+Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
+New wd
+> /proj/naiss2023-22-412/projects/microbiome/working/Hy/test
 
- 
+ module load bioinfo-tools trimmomatic/0.39 ; ls | paste - - | while read pair; do java -jar trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$pair1 ../../trimm/$unpair1 ../../trimm/$pair2 ../../trimm/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done
+
+
+
+
+
+    You can use the following bash code to separate the files into 4 variables:
+
+```bash
+#!/bin/bash
+
+# Define input files
+file="sub_P12002_101_S13_L002_R1_001.fastq sub_P12002_101_S13_L005_R2_001.fastq"
+
+# Define output files
+pair1=$(echo $file | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/')
+unpair1=$(echo $file | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/')
+pair2=$(echo $file | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/')
+unpair2=$(echo $file | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/')
+
+echo "pair1=$pair1 unpair1=$unpair1 pair2=$pair2 unpair2=$unpair2"
+
+#This one work!
+module load bioinfo-tools trimmomatic/0.39; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$pair1 ../../trimm/$unpair1 ../../trimm/$pair2 ../../trimm/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done
+
+
+cat ../id.txt | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
+
+
+
+
+
+
+
+
+
+
+
+```
