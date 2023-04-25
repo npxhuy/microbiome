@@ -252,7 +252,7 @@ rm */*.md5
 # 4. Put the sub sampling file in the desire directory and cd out the folder
 module load bioinfo-tools seqtk/1.2-r101; ls | while read folder; do cd $folder; ls | while read file; do seqtk sample -s100 $file 10000 > ../../sub_samp/$folder/sub_$file ; done ; cd .. ; done
 ```
-3. fastqc + trimm - ON GOING
+3. fastqc + trimm - DONE
 ```bash
 # FASTQC
 # After sub sampling, fastqc did not recognise the gz file, so have to remove the .gz in the file
@@ -276,50 +276,27 @@ module load bioinfo-tools trimmomatic/0.39
 # 5. cd out when finish with one folder
 ls | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
 ```
-4. kraken2 on test data
+4. kraken2 on test data - on going
+```bash
+# Data base
+# /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/
+
+# Rachel code
+for i in `ls *.ccsreads.fastq.gz`;
+do kraken2 $i -db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --gzip-compressed --report pt_042_longReads/${i%.ccsreads.fastq.gz}.report --unclassified-out pt_042_longReads/${i%.ccsreads.fastq.gz}.unclassified --classified-out pt_042_longReads/${i%.ccsreads.fastq.gz}.classified > pt_042_longReads/${i%.ccsreads.fastq.gz}.out;
+done
+
+# This scripts was run in trimm directory - kraken.sh
+# 1. Loop through folder and cd to folder
+# 2. Each folder now have 4 files for each pair (2 unpaired and 2 paired), paste to make 4 files in one line
+# 3. Extract the pair with pair1 and pair2, prefix using regex for naming in kraken
+# 4. Run kraken
+ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/sub_(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --use-names --confidence 0.05 --paired $pair1 $pair2 --unclassified-out ../kraken/$folder/$prefix.unclassified --classified-out ../kraken/$folder/$prefix.classified --report ../kraken/$folder/$prefix.report
+```
 5. Readme file for deadline
+
 
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
 New wd
 > /proj/naiss2023-22-412/projects/microbiome/working/Hy/test
-
- module load bioinfo-tools trimmomatic/0.39 ; ls | paste - - | while read pair; do java -jar trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$pair1 ../../trimm/$unpair1 ../../trimm/$pair2 ../../trimm/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done
-
-
-
-
-
-    You can use the following bash code to separate the files into 4 variables:
-
-```bash
-#!/bin/bash
-
-# Define input files
-file="sub_P12002_101_S13_L002_R1_001.fastq sub_P12002_101_S13_L005_R2_001.fastq"
-
-# Define output files
-pair1=$(echo $file | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/')
-unpair1=$(echo $file | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/')
-pair2=$(echo $file | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/')
-unpair2=$(echo $file | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/')
-
-echo "pair1=$pair1 unpair1=$unpair1 pair2=$pair2 unpair2=$unpair2"
-
-#This one work!
-module load bioinfo-tools trimmomatic/0.39; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$pair1 ../../trimm/$unpair1 ../../trimm/$pair2 ../../trimm/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done
-
-
-cat ../id.txt | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
-
-
-
-
-
-
-
-
-
-
-
-```
