@@ -291,7 +291,7 @@ done
 # 2. Each folder now have 4 files for each pair (2 unpaired and 2 paired), paste to make 4 files in one line
 # 3. Extract the pair with pair1 and pair2, prefix using regex for naming in kraken
 # 4. Run kraken
-ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/sub_(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --use-names --confidence 0.05 --paired $pair1 $pair2 --unclassified-out ../kraken/$folder/$prefix.unclassified --classified-out ../kraken/$folder/$prefix.classified --report ../kraken/$folder/$prefix.report ; done ; cd .. ; done
+ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/sub_(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --use-names --confidence 0.05 --paired $pair1 $pair2 --unclassified-out ../../kraken/$folder/$prefix.unclassified --classified-out ../../kraken/$folder/$prefix.classified --report ../../kraken/$folder/$prefix.report ; done ; cd .. ; done
 
 ```
 4. 2. Install bracken
