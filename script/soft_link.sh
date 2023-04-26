@@ -22,11 +22,14 @@ cat id.txt | while read folder; do main=$(echo $folder | cut -d \_ -f 1) ; mkdir
 rm */*.md5
 
 # Sub sampling
+
 module load bioinfo-tools seqtk/1.2-r101; cat id.txt | while read folder; do cd $folder ; ls | while read $file; do seqtk sample -s100 $file 10000 > sub_$file
 cat id.txt | while read folder; do cd $folder; ls | while read $file; do seqtk sample -s100 $file > ../subsampling/$folder/sub_$file ; done; cd .. ; done 
 
 module load bioinfo-tools seqtk/1.2-r101; ls | while read folder; do cd $folder; ls | while read file; do seqtk sample -s100 $file 10000 > ../../subsampling/$folder/sub_$file ; done ; cd .. ; done
 
+
+ls | while read folder; do cd $folder; ls | while read file; do name=$(echo "$file" | sed 's/\.gz$//') ; cp $file $name ; done ; cd .. ; done
 
 
 

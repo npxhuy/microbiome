@@ -291,7 +291,18 @@ done
 # 2. Each folder now have 4 files for each pair (2 unpaired and 2 paired), paste to make 4 files in one line
 # 3. Extract the pair with pair1 and pair2, prefix using regex for naming in kraken
 # 4. Run kraken
-ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/sub_(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --use-names --confidence 0.05 --paired $pair1 $pair2 --unclassified-out ../kraken/$folder/$prefix.unclassified --classified-out ../kraken/$folder/$prefix.classified --report ../kraken/$folder/$prefix.report
+ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/sub_(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --use-names --confidence 0.05 --paired $pair1 $pair2 --unclassified-out ../kraken/$folder/$prefix.unclassified --classified-out ../kraken/$folder/$prefix.classified --report ../kraken/$folder/$prefix.report ; done ; cd .. ; done
+
+# Error
+
+Kraken2_data/latest: The location of the standard Kraken2 database is held in $KRAKEN2_DEFAULT_DB
+Kraken2_data/latest: The latest_nt database is built with --fast-build
+Kraken2_data/latest: Several other prebuilt databases are also provided.
+Kraken2_data/latest: See 'module help Kraken2_data/latest'
+Kraken2/2.1.2-20211210-4f648f5: Use node-local temporary storage or vmtouch when building and accessing Kraken2 databases.
+Kraken2/2.1.2-20211210-4f648f5: For more information, see 'module help Kraken2/2.1.2-20211210-4f648f5'
+/var/spool/slurmd/job37440280/slurm_script: line 23: syntax error: unexpected end of file
+
 ```
 5. Readme file for deadline
 
