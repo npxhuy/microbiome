@@ -26,6 +26,8 @@ Version: [0.39](https://github.com/usadellab/Trimmomatic)\
 Description: Trimming and filtering sequencing read.\
 Installation: Available on UPPMAX's resources, but can be installed using **conda**
 > conda install -c bioconda trimmomatic=0.39
+
+Author's note: I do not recommend to install through conda because it's more complicated when run the program, download the [package](https://github.com/usadellab/Trimmomatic/releases) and call the package when running the trimming process is more logical for me at least.
 ## FastQC
 Version: [0.11.9](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)\
 Description: Quality control tool for high throughput sequencing data.\
@@ -79,5 +81,73 @@ These following directories were made in order to have more organised working pl
 mkdir scripts
 mkdir err_out
 ```
+This is the directory on the server to the list of all sample that gonna be used in this analysis
+> /proj/snic2022-6-377/Projects/Tconura/working/Rachel/popgen_Tconura/allpops.Tcon.txt
+```bash
+head /proj/snic2022-6-377/Projects/Tconura/working/Rachel/popgen_Tconura/allpops.Tcon.txt
+P12002_144	CHES
+P12002_145	CHES
+P12002_146	CHES
+P12002_147	CHES
+P12002_148	CHES
+P12002_149	CHES
+P12002_150	CHES
+P12002_151	CHES
+P12002_152	CHES
+P12002_153	CHES
+```
+This is the location of whole genome sequences, here it has 3 folders, each folder has multi subfolder that contains samples of whole genome sequences
+> /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/
+```bash
+ls /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/
+P12002	P14052	P18751
+```
+Exploring the above directory, it contains multiple **.lst* files that has the information about the path to the samples, for example:
+```bash
+less /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/P12002/P12002_101.lst
+P12002_101/02-FASTQ/190111_ST-E00214_0275_AHWLHMCCXY/P12002_101_S13_L005_R2_001.fastq.gz
+P12002_101/02-FASTQ/190111_ST-E00214_0275_AHWLHMCCXY/P12002_101_S13_L008_R2_001.fastq.gz
+P12002_101/02-FASTQ/190111_ST-E00214_0275_AHWLHMCCXY/P12002_101_S13_L002_R2_001.fastq.gz
+P12002_101/02-FASTQ/190111_ST-E00214_0275_AHWLHMCCXY/P12002_101_S13_L008_R1_001.fastq.gz
+P12002_101/02-FASTQ/190111_ST-E00214_0275_AHWLHMCCXY/P12002_101_S13_L002_R1_001.fastq.gz
+P12002_101/02-FASTQ/190111_ST-E00214_0275_AHWLHMCCXY/P12002_101_S13_L005_R1_001.fastq.gz
+P12002_101.md5
+```
+Using these information, a soft-link to the samples were created to the current working directory.
+```bash
+### STEP 1: Create id.txt file
+# Go to the main working directory
+cd /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
+# Create a file call id.txt that contains only the name of the sample folder
+cut -f 1 /proj/snic2022-6-377/Projects/Tconura/working/Rachel/popgen_Tconura/allpops.Tcon.txt > id.txt
 
+### STEP 2: Soft-link the sample
+# 1. Make diretory as the in the txt file, cd to folder
+# 2. Loop through the *.lst file, that contains the directory the fastq.gz
+# 3. Create soft link of fastq.gz inside that folder
+# 4. Cd out, repeat the loop
+# Note: could write an if to not read the md5 so we dont have to remove later but it's easier to remove than thinking about writing a extra condition code so what's the point
+# Note2: if this code did not work for you, try to mkdir first, and then run the code again without the mkdir $folder
+cd wgs_samples
+cat ../id.txt | while read folder; do main=$(echo $folder | cut -d \_ -f 1) ; mkdir $folder; cd $folder ; cat /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/$main/$folder.lst | while read dir; do ln -s /proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/$main/$dir ; done ; cd .. ; done
 
+### STEP 3: Cleaning
+# The .lst file contains the md5 that is not useful in this situation so remove it
+rm */*.md5
+```
+## 2. Trimming.
+The script *trimm.sh* was run in *wgs_sample* directory. See the scripts *trimm.sh* for more information.\
+The trimming process took about 40 hours to run on the server, and needed approximately over 400 GB of storage.\
+When running *trimmomatic* using *conda*, you might need to look for more information yourself on how to modify the code. When running it by calling the downloaded package, *$TRIMMOMATIC_ROOT* should be replaced by the directory to the *trimmomatic* package.
+```bash
+# Load tools from UPPMAX
+module load bioinfo-tools trimmomatic/0.39
+
+# 1. Loop through each folder
+# 2. In every folder, ls to have all the file, paste - - to have pair of files in one line
+# 3. Loop through each pair, cut and set and other stuff to have the name of the output for trimmomatic
+# 4. Do trimmomatic for each pair and put the output in trimm folder
+# 5. cd out when finish with one folder
+ls | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:$TRIMMOMATIC_ROOT/adapters/TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
+```
+## 3. FastQC and MultiQC.

@@ -303,10 +303,19 @@ conda activate /proj/naiss2023-22-412/projects/microbiome/working/Hy/env/microbi
 conda install bracken=2.8
 ```
 
-5. Readme file for deadline
-
+## **27-3rd May 2023**.
+Re-do the tasks in the previous week but on the main data without sub-sampling
+```bash
+# These directory are made
+mkdir raw_wgs
+mkdir fastqc
+mkdir trimm
+mkdir kraken
+```
+Soft-link has already been created
 
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
 New wd
 > /proj/naiss2023-22-412/projects/microbiome/working/Hy/test
+
