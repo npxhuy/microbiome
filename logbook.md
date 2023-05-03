@@ -312,10 +312,26 @@ mkdir fastqc
 mkdir trimm
 mkdir kraken
 ```
-Soft-link has already been created
+Soft-link has already been created.
+
+**MAY 2nd update**\
+The new working directory does not have enough storage so I have to come back to the old working directory.\
+The trimming process took so much time but it's done.\
+The fastqc is not done yet, still running.\
+The kraken step queue for a day, run for 6 hours but did not give any output so it must be something with the code, still try to run a small batch and see what will happen.\
+Started writing readme.md file.
+
+**MAY 3rd update**\
+fastqc encounter problem for P14052, with this error:
+>Exception in thread "Thread-1" java.lang.OutOfMemoryError: GC overhead limit exceeded\
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "Thread-1" 
+
+-> Try to add -t 2 flag in the code and see how it goes, it's done
+
+RAISE QUESTION: run multiqc on both paired and unpaired?
 
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
+
 New wd
 > /proj/naiss2023-22-412/projects/microbiome/working/Hy/test
-

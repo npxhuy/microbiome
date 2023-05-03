@@ -140,6 +140,11 @@ The script *trimm.sh* was run in *wgs_sample* directory. See the scripts *trimm.
 The trimming process took about 40 hours to run on the server, and needed approximately over 400 GB of storage.\
 When running *trimmomatic* using *conda*, you might need to look for more information yourself on how to modify the code. When running it by calling the downloaded package, *$TRIMMOMATIC_ROOT* should be replaced by the directory to the *trimmomatic* package.
 ```bash
+### STEP 1: Make directory in trimm
+cd trimm
+cat ../id.txt | while read folder; do mkdir $folder; done
+
+### STEP 2: Run trimmomatic
 # Load tools from UPPMAX
 module load bioinfo-tools trimmomatic/0.39
 
@@ -151,3 +156,41 @@ module load bioinfo-tools trimmomatic/0.39
 ls | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:$TRIMMOMATIC_ROOT/adapters/TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
 ```
 ## 3. FastQC and MultiQC.
+**NOTE**\
+flag -t 2 on P14 samples
+* * *
+The script *fastqc.sh* was run in *trimm* directory. See the scripts *fastqc.sh* for more information.\
+The fastqc process was estimated to take about 12 hours to run on the server.\
+```bash
+### STEP 1: Make directory in fastqc
+cd fastqc
+cat ../id.txt | while read folder; do mkdir $folder; done
+
+### STEP 2: Run fastqc
+# Load module
+module load bioinfo-tools FastQC/0.11.9
+# 1. Ls of folder and cd in each folder
+# 2. Fastqc for every file, -o flag for output directory
+
+ls | while read folder; do cd $folder; ls | while read file; do fastqc -o ../../fastqc/$folder $file ; done;  cd ..; done
+```
+KNOWN ISSUE:
+> Exception in thread "Thread-1" java.lang.OutOfMemoryError: GC overhead limit exceeded\
+Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler in thread "Thread-1"
+
+This was raised when running files in *P14052_101* directory inside *trimm* directory. To overcome this, another flag was added to the code to run *fastqc* on the rest of the data.\
+Personally I did not want to re run the whole data so keep in my that the last 12 samples were run with the flag *-t 2*, which indicated specifies the number of files which could be processedsimultaneously. Therefore this flag was not an additional parameter that can alter the outcome if it was to run everything again.
+```bash
+ls | while read folder; do cd $folder; ls | while read file; do fastqc -t 2 -o ../../fastqc/$folder $file ; done;  cd ..; done
+```
+After having the result, *multiqc.sh* script was run in the *fastqc* directory. It took about at least 5 minutes to run. See the scripts *multiqc.sh* for more information.
+```bash
+# Load module
+module load bioinfo-tools MultiQC/1.12
+# Run multiqc
+multiqc .
+```
+## 4. Kraken2
+```bash
+ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq.gz/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --gzip-compressed --use-names --confidence 0.05 --paired $pair1 $pair2 --output ../../kraken/$folder/$prefix.out --report ../../kraken/$folder/$prefix.report ; done; cd ..; done
+```
