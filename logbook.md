@@ -331,8 +331,9 @@ Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler i
 RAISE QUESTION: run multiqc on both paired and unpaired?
 
 **MAY 4th update**\
-Write Kraken combine scripts 
-RAISE QUESTION: seperated folders for kraken combine? is it necessary? personally i do not think so
+Write Kraken combine scripts - DONE
+RAISE QUESTION: seperated folders for kraken combine? is it necessary? personally i do not think so\
+see kraken.err file
 
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test

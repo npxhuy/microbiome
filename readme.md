@@ -216,7 +216,7 @@ module load bioinfo-tools Kraken2/2.1.2-20211210-4f648f5
 ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq.gz/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --gzip-compressed --use-names --confidence 0.05 --paired $pair1 $pair2 --output ../../kraken/$folder/$prefix.out --report ../../kraken/$folder/$prefix.report ; done; cd ..; done
 ```
 The script *kraken_combined.sh* was run in *kraken* directory. See the scripts *kraken_combined.sh* for more information.\
-The KrakenTools' combining process was estimated to take about X hours to run on the server.
+The KrakenTools' combining process was estimated to take about X hours to run on the server. 
 ```bash
 ### STEP 1: Download KrakenTools
 cd tools
@@ -233,4 +233,9 @@ conda create -n microbiome # Create new env
 source conda_init.sh #Only needed when run on UPPMAX
 conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome # Activate this env
 conda install bracken=2.8
+
+
+
+# Bracken
+ls | while read report; do bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l S -r 100 -t 10
 ```
