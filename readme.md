@@ -43,20 +43,26 @@ Version: [2.1.2](https://ccb.jhu.edu/software/kraken2/)\
 Description: Taxonomic sequence classifier.\
 Installation: Available on UPPMAX's resources, but can be installed using **conda**
 > conda install -c bioconda kraken2=2.1.2
+## KrakenTools
+Description: Merge kraken reports and subset braken's output.\
+Installation: Clone from [github](https://github.com/jenniferlu717/KrakenTools)
+> git clone https://github.com/jenniferlu717/KrakenTools
 ## Bracken
-Version: \
+Version: [2.8](https://github.com/jenniferlu717/Bracken)
 Description: \
-Installation: \
+Installation: Installed using **conda**
+> conda install bracken=2.8
 * * * 
 # Pipeline of analysis
 **NOTE**  
 Add a link tree of the working directory at (1).\
 Add absolute working dir on uppmax at (2)\
-Add raw data wd at (3)\
 * * *
 My file tree of my repository on the server could be found [here](). (1)\
 The absolute path to the working directory on the UPPMAX's server is: (2)\
-The absolute path to the raw data on UPPMAX's server is: (3)\
+The absolute path to the raw data on UPPMAX's server is: 
+>/proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/
+
 In order to sucessufully follow this analysis, you must:
 - Following strictly to the naming of directory, subdirectory, naming format, ect.
 - Installing every software that was stated.
@@ -67,11 +73,14 @@ Add more directory as the pipeline goes on!!!.
 * * *
 The following directories were created in the current working directory, using *mkdir*.
 ```bash
+mkdir tools
+mkdir env
 mkdir wgs_sample
 mkdir trimm
 mkdir fastqc
 mkdir multiqc
 mkdir kraken
+mkdir kraken_combined
 mkdir bracken
 ```
 These following directories were made in order to have more organised working place.
@@ -140,7 +149,7 @@ The script *trimm.sh* was run in *wgs_sample* directory. See the scripts *trimm.
 The trimming process took about 40 hours to run on the server, and needed approximately over 400 GB of storage.\
 When running *trimmomatic* using *conda*, you might need to look for more information yourself on how to modify the code. When running it by calling the downloaded package, *$TRIMMOMATIC_ROOT* should be replaced by the directory to the *trimmomatic* package.
 ```bash
-### STEP 1: Make directory in trimm
+### STEP 1: Make directories in trimm
 cd trimm
 cat ../id.txt | while read folder; do mkdir $folder; done
 
@@ -160,7 +169,7 @@ ls | while read folder; do cd $folder; ls | paste - - | while read pair; do pair
 The script *fastqc.sh* was run in *trimm* directory. See the scripts *fastqc.sh* for more information.\
 The fastqc process was estimated to take about 12 hours to run on the server.\
 ```bash
-### STEP 1: Make directory in fastqc
+### STEP 1: Make directories in fastqc
 cd fastqc
 cat ../id.txt | while read folder; do mkdir $folder; done
 
@@ -188,7 +197,40 @@ module load bioinfo-tools MultiQC/1.12
 # Run multiqc
 multiqc .
 ```
-## 4. Kraken2
+## 4. Kraken2 and KrakenTools
+The script *kraken.sh* was run in *trimm* directory. See the scripts *kraken.sh* for more information.\
+The Kraken2 process was estimated to take about 16 hours to run on the server.
 ```bash
+### STEP 1: Make directories in kraken
+cd kraken
+cat ../id.txt | while read folder; do mkdir $folder; done
+
+### STEP 2: Run Kraken2
+# Load tools from UPPMAX
+module load bioinfo-tools Kraken2/2.1.2-20211210-4f648f5
+
+# 1. Loop through folder and cd to folder
+# 2. Each folder now have 4 files for each pair (2 unpaired and 2 paired), paste to make 4 files in one line
+# 3. Extract the pair with pair1 and pair2, prefix using regex for naming in kraken
+# 4. Run kraken
 ls | while read folder; do cd $folder; ls | paste - - - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1); pair2=$(echo $pair | cut -d ' ' -f 3); prefix=$(echo $pair | cut -d ' ' -f 1 | sed -E 's/(P[0-9]+_[0-9]+_[A-Z0-9]+)_L([0-9]+)_R[0-9]+_001_paired.fastq.gz/\1_L\2_001/');  kraken2 –db /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ --threads 20 --report-zero-counts --gzip-compressed --use-names --confidence 0.05 --paired $pair1 $pair2 --output ../../kraken/$folder/$prefix.out --report ../../kraken/$folder/$prefix.report ; done; cd ..; done
+```
+The script *kraken_combined.sh* was run in *kraken* directory. See the scripts *kraken_combined.sh* for more information.\
+The KrakenTools' combining process was estimated to take about X hours to run on the server.
+```bash
+### STEP 1: Download KrakenTools
+cd tools
+git clone https://github.com/jenniferlu717/KrakenTools
+
+### STEP 2: Run KrakenTools to merge Kraken2's report files
+ls| while read folder; do cd $folder; reports=$(ls *out | tr '\n' ' '); python ../../tools/KrakenTools/combine_kreports.py -r $reports --only-combined -o ../../kraken_combined/test.reports
+```
+## 5. Braken
+```bash
+module load conda # Load conda on uppmax
+export CONDA_ENVS_PATH=/proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env # Change env directory 
+conda create -n microbiome # Create new env
+source conda_init.sh #Only needed when run on UPPMAX
+conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome # Activate this env
+conda install bracken=2.8
 ```
