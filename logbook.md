@@ -328,12 +328,12 @@ Exception: java.lang.OutOfMemoryError thrown from the UncaughtExceptionHandler i
 
 -> Try to add -t 2 flag in the code and see how it goes, it's done
 
-RAISE QUESTION: run multiqc on both paired and unpaired?
+RAISE QUESTION: run multiqc on both paired and unpaired? - Done
 
 **MAY 4th update**\
 Write Kraken combine scripts - DONE
-RAISE QUESTION: seperated folders for kraken combine? is it necessary? personally i do not think so\
-see kraken.err file
+RAISE QUESTION: seperated folders for kraken combine? is it necessary? personally i do not think so - DONE \
+see kraken.err file - DONE (optional to extract the unclassified and classified data and put them in table)
 
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
