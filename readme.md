@@ -83,6 +83,7 @@ mkdir kraken
 mkdir kraken_combined
 mkdir bracken
 mkdir bracken_filtered
+mkdir diversity_result
 ```
 These following directories were made in order to have more organised working place.
 - *scripts* contains all the scripts that were written to perform the pipeline, and to submit onto the server to run.
@@ -276,9 +277,28 @@ The KrakenTools' filtering process was estimated to take at least 1 minutes to r
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_filtered/$name.bracken_filtered --exclude 9606 ; done
 ```
 ## 6. DiversityTools (KrakenTools - alpha_diversity.py & beta_diversity.py)
-
-
-Create all possible combination of 2 of the filtered bracken files for beta diversity
+### Shannon's alpha diversity
+The script *alpha_shannon.sh* was run in *bracken_filtered* directory. See the scripts *alpha_shannon.sh* for more information.\
+Calculate Shannon's alpha diversity using KrakenTools (*alpha_diversity.py*). The calculating process took at least 1 minutes to run on the server.
+```bash
+# 1. Loop through the bracken's results
+# 2. Cut the file name for naming
+# 3. Calculate alpha diversity, cut the result to have only the wanted information.
+# 4. Write results in shannon_alpha.txt
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha.txt
+```
+### Inverse Simpson's alpha diversity
+The script *alpha_inverse_simpson.sh* was run in *bracken_filtered* directory. See the scripts *alpha_inverse_simpson.sh* for more information.\
+Calculate inverse Simpson's diversity using KrakenTools (*alpha_diversity.py*). The calculating process took at least 1 minutes to run on the server.
+```bash
+# 1. Loop through the bracken's results
+# 2. Cut the file name for naming
+# 3. Calculate alpha diversity, cut the result to have only the wanted information.
+# 4. Write results in inverse_simpson_alpha.txt
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file -a ISi | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha.txt
+```
+### Beta diversity
+Create all possible combination of 2 of the filtered bracken files for calculating beta diversity.
 ```bash
 # 1. Store all files names in an array
 # 2. Run a nested for loop to iterate over all possible combinations of two files in the files array. The outer loop iterates over the indices of the first file in each pair, while the inner loop iterates over the indices of the second file in each pair. The range of the inner loop starts from the index of the outer loop plus one to avoid duplicate pairs.
@@ -293,4 +313,11 @@ Create all possible combination of 2 of the filtered bracken files for beta dive
 # 3. Save the printed pairs into a file call 'combination.txt'
 files=($(ls)) ;for (( i=0; i<${#files[@]}; i++ )); do for (( j=i+1; j<${#files[@]}; j++ )); do echo "${files[i]} ${files[j]}"; done ; done > combination.txt
 ```
+The script *beta_diversity.sh* was run in *bracken_filtered* directory. See the scripts *beta_diversity.sh* for more information.\
+Calculate inverse beta diversity using KrakenTools (*beta_diversity.py*). The calculating process took at least 8 minutes to run on the server.
+```bash
+cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
+```
+
+
 

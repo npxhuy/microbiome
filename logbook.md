@@ -333,7 +333,15 @@ RAISE QUESTION: run multiqc on both paired and unpaired? - Done
 **MAY 4th update**\
 Write Kraken combine scripts - DONE
 RAISE QUESTION: seperated folders for kraken combine? is it necessary? personally i do not think so - DONE \
-see kraken.err file - DONE (optional to extract the unclassified and classified data and put them in table)
+see kraken.err file - DONE (optional to extract the unclassified and classified data and put them in table)\
+Run Bracken and KrakenTools
+## **4-10th May 2023**.
+Run alpha diversity on the bracken results + beta diversity.\
+The flag -cols in beta scripts does not make any differences, I tried diff between the result generated without and with that flag but see no difference. \
+Update readme file.\
+*PCA step*\
+First pca: convert NA to 0, add 1 to all cells, then  log2() transforms all cells\
+
 
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
