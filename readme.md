@@ -1,4 +1,6 @@
 # Deadline and tracking hand-in files  and other important stuffs (to be deleted later)
+## PRESENTATION DAY: 14 June
+## -> SUBMISSION: 7 June
 ## Readme
 1. Introduction to software
 2. Pipeline of analysis
@@ -14,7 +16,7 @@
 6. Ack
 7. Ref
 # Author's note
-This project was done in the server UPPMAX. Most of the applications/packages/softwares were already installed on the server, except where noted.\
+This project was mainly done in the server UPPMAX (except from data analysis & visualisation). Most of the applications/packages/softwares were already installed on the server, except where noted.\
 When running code on UPPMAX's server, when using certain software (Kraken2 to be specific), code written in multiple lines had problem running, thus the codes/scripts here were all written as one long line of code to avoid having problem when running on the server. It was not the best way to demonstrate and keep track of code but that was the best bet to run codes/scripts normally on UPPMAX.
 # Introduction to software which would be used in this pipeline
 ## conda
@@ -48,10 +50,14 @@ Description: Merge kraken reports and subset braken's output.\
 Installation: Clone from [github](https://github.com/jenniferlu717/KrakenTools)
 > git clone https://github.com/jenniferlu717/KrakenTools
 ## Bracken
-Version: [2.8](https://github.com/jenniferlu717/Bracken)
+Version: [2.8](https://github.com/jenniferlu717/Bracken)\
 Description: \
 Installation: Installed using **conda**
 > conda install bracken=2.8
+## R & R Studio
+Version: R [4.3.0](https://cran.rstudio.com/) & R studio [2023.03.1+446](https://posit.co/download/rstudio-desktop/)\
+Description: Data analysis & visualisation.\
+Installation: Visit the link above for requirments and tutorial of installation.
 * * * 
 # Pipeline of analysis
 **NOTE**  
@@ -234,6 +240,8 @@ git clone https://github.com/jenniferlu717/KrakenTools
 # 2. Take only the report files in the directory and put them all in one line as a variable $reports
 # 3. Run the KrakenTools on the reports and cd back to the main folder
 ls| while read folder; do cd $folder; reports=$(ls *report | tr '\n' ' '); python ../../tools/KrakenTools/combine_kreports.py -r $reports --only-combined -o ../../kraken_combined/$folder.reports; cd .. ; done
+
+ls| while read folder; do cd $folder; reports=$(ls *report | tr '\n' ' '); python ../../tools/KrakenTools/combine_kreports.py -r $reports --only-combined -o ../../kraken_combined2/$folder.reports; cd .. ; done
 ```
 ## 5. Bracken and KrakenTools (filter_bracken_out.py)
 ### Bracken
@@ -262,6 +270,12 @@ conda install bracken=2.8
 # -r is reading frame, since the multiqc report give the average length is from 100 to 150, we take 100
 # -t is threshold, need at least 10 similar results to classify it as a species
 ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l S -r 100 -t 10 -o ../bracken/$name.bracken ; done
+
+# Run level Family
+module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l F -r 100 -t 10 -o ../bracken_F/$name.bracken ; done
+
+#Genus
+module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l G -r 100 -t 10 -o ../bracken_G/$name.bracken ; done
 ```
 ### Filter bracken's results
 The script *bracken_filtered.sh* was run in *bracken* directory. See the scripts *bracken_filtered.sh* for more information.\
@@ -275,6 +289,18 @@ The KrakenTools' filtering process was estimated to take at least 1 minutes to r
 # Parameter's explanation:
 # --exclude 9606: exclude anything that mapped to human sequences (taxonomic id 9606), which is our only metazoan representative
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_filtered/$name.bracken_filtered --exclude 9606 ; done
+
+# Family
+ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../../bracken_F_filtered/$name.bracken_filtered --exclude 9604 ; done
+
+# Genus include wolbachia
+ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_F_filtered/$name.bracken_filtered --include 953 ; done
+
+ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_Wolbachia_filtered/$name.bracken_filtered --include $wol ; done
+
+
+#Filter out only wolbachia
+wol=$(ls | while read file; do cat $file | grep "Wolbachia" | cut -f 2 | sort | uniq| tr "\n" " "; done); ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_wolbachia_filtered/$name.bracken_wol_filtered --include $wol --exclude 9606 ; done
 ```
 ## 6. DiversityTools (KrakenTools - alpha_diversity.py & beta_diversity.py)
 ### Shannon's alpha diversity
@@ -318,6 +344,14 @@ Calculate inverse beta diversity using KrakenTools (*beta_diversity.py*). The ca
 ```bash
 cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
 ```
+## 7. Data analysis
+
+```bash
+cat beta.txt | while read line; do s1=$(echo $line | cut -d " " -f 2 | sed 's/\.bracken_filtered$//'); s2=$(echo $line | cut -d " " -f 6 | sed 's/\.bracken_filtered$//'); v=$(echo $line | cut -d " " -f 14) ; echo $s1 $s2 $v; done
+```
+
+
+ls | while read file; do cat $file | cut -f 1,6 > ../copy_local_2/$file; done
 
 
 

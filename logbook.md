@@ -343,6 +343,20 @@ Update readme file.\
 First pca: convert NA to 0, add 1 to all cells, then  log2() transforms all cells\
 
 
+
+
+
+
+
+sample1=$(echo "$line" | sed -n 's/.* #0 \([^[:space:]]*\)\..*/\1/p')
+  sample2=$(echo "$line" | sed -n 's/.* #1 \([^[:space:]]*\)\..*/\1/p')
+  value=$(echo "$line" | awk '{print $12}')
+
+  # Print the extracted information
+  echo "$sample1 $sample2 $value"
+done < your_file.txt
+
+
 Old wd
 > /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
 

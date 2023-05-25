@@ -1,21 +1,3 @@
----
-title: "Code report"
-author: "Pham Xuan Huy Nguyen"
-date: "2023-05-11"
-output: html_document
----
-
-## brackenPCA.R - ORIGINAL CODE + My comment
-
-### Load packages + args
-
-This part seems okay, nothing was weird to me at least.\
-But there are some stuffs that worth mentioning:\
-1. the *raw_counts* variable was never used again\
-2. could it be the *raw_counts* is also the *raw_counts_matrix* in the next part?\
-3. I cant not run the function *read_table* in my R Studio although I loaded all the required packages, alternatively I use *read.table* instead
-
-```{r}
 # 
 library(dplyr)
 library(tibble)
@@ -40,16 +22,8 @@ prefix = args[3]
 
 # if you want to run this in the Rstudio, you can read in your files directly
 # raw_counts <- read_table("name_of_file")
-```
 
-### Prep data
 
-Assuming the *bracken_est_reads* is the variable which holds the merged data.\
-I guess the *\~replace_na(.x, 0)* is you gonna replace the NA value with 0.\
-But I cant not run the code with the *replace...*, so I have to removed it and do manually.\
-Additionally, I think it doesn't matter if I used the first code or not, as long as I can replace the NA with 0?
-
-```{r}
 ## Run the pca
 # you should use scaled, normalized data when running the pca
 # all NAs are converted to 0. 
@@ -60,22 +34,9 @@ raw_counts_matrix <- bracken_est_reads %>%
 
 # Because we cannot take the log of 0, we add 1 read
 # this is called a shifted log transformation
-```
 
-This part is fine
-
-```{r}
 log_counts_matrix <- log2(raw_counts_matrix +1)
-```
-
-This is where the problem started to rise.\
-So I guess, the *prcomp* is the one that perform the PCA, and by default the names of the principal components are named PC1 PC2 ect.\
-But in *PCA.data.frame* we used the *PCA.scaled_log_counts* that was made from the *prcomp* and *left_join* it by the *sample_id* which was kinda messed up.\
-Because on one side we have PC1 2..., on the *metadata* we have the original name P12... so joining the data made the data about hostplant or sth became NA.\
-
-The *PCA.summary* was okay, I guess, but still the naming was PC1 2 ect, so the bar plot it made, the label of each bar was PC1 PC2 ect.\
-
-```{r}
+  
 # calculate principal components
 PCA.scaled_log_counts <- prcomp(log_counts_matrix, scale. = F, center = T)
 PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
@@ -87,13 +48,7 @@ PCA.data.frame <- as.data.frame(PCA.scaled_log_counts$x) %>%
   rownames_to_column(var = "sample_id") %>% 
   left_join(metadata, by = "sample_id")
 # write_tsv(PCA.data.frame,paste0(prefix, "PCA.samples.tsv"))
-```
 
-### Plotting
-
-This one I guess I dont have any problem, but the problem was also mentioned (the bar plot label is PC1 2...)
-
-```{r}
 PCA.propVar <- ggplot(PCA.summary[1:6,], 
                       aes( x= `Principal Component`, y = `Proportion of Variance`)) +
   geom_bar(stat = "identity") +
@@ -102,11 +57,6 @@ PCA.propVar <- ggplot(PCA.summary[1:6,],
   theme_classic(base_size = 15)
 # ggsave(PCA.propVar, file =paste0(prefix, "PCA.plot.propVariance.pdf"), height = 4.5, width = 6)
 
-```
-
-Should *aes\_* be just *aes*? And here I guess the *aes(color = hostplant, shape= transect)* is not gonna work because of the problem I mentioned above, about them (hostplant, transect) having NA value.
-
-```{r}
 pca_plot <- list()
 for (i in 2:5){
   PC_axes <- c(1,i)
@@ -125,29 +75,3 @@ for (i in 2:5){
   # ggsave(plot = pca.plot[[i-1]], paste0(prefix, "PCA.plot.",PC_columns[1], PC_columns[2],".pdf"), height = 5.5, width = 5)
 }
 pca_plot
-```
-
-POSSIBLE EXPLANATION: Could it be because the way I merge the data was not in the right way your code gonna read?\
-
-## Can you try my way of merging the data and apply your code on it?
-1. Clone the bracken subfolder in my github that contains the bracken data.
-2. Follow the following code
-```{r}
-dir <- "" # Write the directory of the bracken folder inside the " "
-
-files <- list.files(dir)
-
-# Manually handle the first file
-one <- read.table(files[1], header=TRUE, sep='\t') # Read file
-name <- sub("\\..*", "", files[1]) # Change column name
-colnames(one)[2] <- name
-
-merge_data <- one # Set the first data frame as a variable for the loop
-for (i in 2:length(files)){ # Loop through the files
-  temp_data <- read.table(files[i], header=TRUE, sep='\t') # Read the df
-  colnames(temp_data)[2] <- sub("\\..*", "", files[i]) # Change column name
-  merge_data <- merge(merge_data, temp_data, all.x = TRUE, all.y = TRUE) # Merge
-}
-
-merge_data_trans <- t(merge_data) #Flip the data to the correct format for pca
-```
