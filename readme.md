@@ -302,7 +302,19 @@ ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python
 #Filter out only wolbachia
 wol=$(ls | while read file; do cat $file | grep "Wolbachia" | cut -f 2 | sort | uniq| tr "\n" " "; done); ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_wolbachia_filtered/$name.bracken_wol_filtered --include $wol --exclude 9606 ; done
 ```
-## 6. DiversityTools (KrakenTools - alpha_diversity.py & beta_diversity.py)
+## 6. Richness & DiversityTools (KrakenTools - alpha_diversity.py & beta_diversity.py)
+### Richness
+This script was run directly in the *bracken_filtered* directory. This scripts took at least 1 minutes to run on the server
+```bash
+# Note: Do not need to batch this on UPPMAX, this task does not take much resources.
+# 1. Loop through the bracken results
+# 2. Sed the name of the file for naming the output
+# 3. Count the total of line except for the header (the number of lines represent the richness)
+# 4. Output the name and count into a file called species_count.txt
+
+ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../species_count.txt
+```
+
 ### Shannon's alpha diversity
 The script *alpha_shannon.sh* was run in *bracken_filtered* directory. See the scripts *alpha_shannon.sh* for more information.\
 Calculate Shannon's alpha diversity using KrakenTools (*alpha_diversity.py*). The calculating process took at least 1 minutes to run on the server.
@@ -344,10 +356,345 @@ Calculate inverse beta diversity using KrakenTools (*beta_diversity.py*). The ca
 ```bash
 cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
 ```
-## 7. Data analysis
+## 7. Data analysis & visualisaiton
 
+Three main analysis will be done, including:
+1. Alpha diversity\
+Required files: *shannon_alpha.txt* and *inverse_simpson_alpha.txt* in the *diveristy_result* directory.
+2. Beta diversity\
+Required files: *beta.txt* in the *diversity_result* directory.
+3. PCA
+Required files: 96 bracken filtered files in the *bracken_filtered* directory.\
+
+Those files were copied to local computer using [scp](https://linuxize.com/post/how-to-use-scp-command-to-securely-transfer-files/) and the following data analysis and visualisation are mainly done in R except where noted.\
+Additionally, a *all.pops.metadata.tsv* file that has all the information of the sample inculding host plant, transect, population and host range, is used for this part.
 ```bash
-cat beta.txt | while read line; do s1=$(echo $line | cut -d " " -f 2 | sed 's/\.bracken_filtered$//'); s2=$(echo $line | cut -d " " -f 6 | sed 's/\.bracken_filtered$//'); v=$(echo $line | cut -d " " -f 14) ; echo $s1 $s2 $v; done
+head /proj/snic2022-6-377/Projects/Tconura/working/Rachel/all.pops.metadata.tsv 
+sample_id	pop	hostplant	transect	hostrange
+P12002_144	CHES	CH	East	Sympatric
+P12002_145	CHES	CH	East	Sympatric
+P12002_146	CHES	CH	East	Sympatric
+P12002_147	CHES	CH	East	Sympatric
+P12002_148	CHES	CH	East	Sympatric
+P12002_149	CHES	CH	East	Sympatric
+P12002_150	CHES	CH	East	Sympatric
+P12002_151	CHES	CH	East	Sympatric
+P12002_152	CHES	CH	East	Sympatric
+```
+### 1. Alpha diversity
+Plotting box plot to visuallise the alpha diveristy and the richness of samples. In order to use this code on your own computer, you have to change the working directory. Your directory must have the required files.
+```r
+# Set working directory
+setwd("set/your/own/directory") 
+
+# Load library, you may have to install them first using install.package()
+library(lme4)
+library(tidyverse)
+library(dyplr)
+
+# Load required data
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
+count <- read.table("species_count.txt",col.names = c("sample_id","richness"))
+alpha1 <- read.table("shannon_alpha.txt", col.names = c("sample_id","shannon"))
+alpha2 <- read.table("inverse_simpson_alpha.txt", col.names = c("sample_id","inverse_simpson"))
+
+# Join with the metadata
+count_join <- (count) %>%
+  left_join(metadata, by = "sample_id")
+alpha1_join <- (alpha1) %>%
+  left_join(metadata, by = "sample_id")
+alpha2_join <- (alpha2) %>%
+  left_join(metadata, by = "sample_id")
+
+# Plotting
+richness <- ggplot(count_join, aes(x=pop,y=richness, color=hostplant, shape=hostrange)) +
+  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
+  geom_boxplot(outlier.shape = NA) + theme_bw() +
+  xlab("Population") + ylab("Richness") +
+  facet_grid(~transect, scales = "free") +
+  theme(legend.position = "bottom") +
+  geom_jitter(width = 0.1)
+
+alpha1_plot <- ggplot(alpha1_join, aes(x=pop,y=shannon, color=hostplant, shape=hostrange)) +
+  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
+  geom_boxplot(outlier.shape = NA) + theme_bw() +
+  xlab("Population") + ylab("Shannon Diveristy") +
+  facet_grid(~transect, scales = "free") +
+  theme(legend.position = "bottom") +
+  geom_jitter(width = 0.1)
+
+alpha2_plot <- ggplot(alpha2_join, aes(x=pop,y=inverse_simpson, color=hostplant)) +
+  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
+  geom_boxplot(outlier.shape = NA) + theme_bw() +
+  facet_grid(~transect, scales = "free")+
+  xlab("Population") + ylab("Inverse Simpson Diveristy") +
+  theme(legend.position = "bottom") +
+  geom_jitter(width = 0.1)
+
+# Saving plot
+ggsave(plot = richness, filename = "richness.pdf", height = 6, width = 7)
+ggsave(plot = alpha1_plot, filename = "shannon_diversity.pdf", height = 6, width = 7)
+ggsave(plot = alpha2_plot, filename = "inv_simp_diversity.pdf", height = 6, width = 7)
+```
+
+### 2. Beta diversity
+The raw *beta.txt* result is kinda messy so run this code in bash to take only the information we want.
+```bash
+head beta.txt
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_102.bracken_filtered (102099 reads) x 0 1 0 0.000 0.315 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_103.bracken_filtered (278914 reads) x 0 1 0 0.000 0.673 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_104.bracken_filtered (118762 reads) x 0 1 0 0.000 0.413 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_105.bracken_filtered (314229 reads) x 0 1 0 0.000 0.653 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_106.bracken_filtered (80230 reads) x 0 1 0 0.000 0.497 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_107.bracken_filtered (118902 reads) x 0 1 0 0.000 0.277 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_108.bracken_filtered (111833 reads) x 0 1 0 0.000 0.454 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_109.bracken_filtered (503861 reads) x 0 1 0 0.000 0.729 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_110.bracken_filtered (111549 reads) x 0 1 0 0.000 0.353 1 x.xxx 0.000
+#0 P12002_101.bracken_filtered (136408 reads) #1 P12002_111.bracken_filtered (91837 reads) x 0 1 0 0.000 0.256 1 x.xxx 0.000
+
+# Clean the data
+cat beta.txt | while read line; do s1=$(echo $line | cut -d " " -f 2 | sed 's/\.bracken_filtered$//'); s2=$(echo $line | cut -d " " -f 6 | sed 's/\.bracken_filtered$//'); v=$(echo $line | cut -d " " -f 14) ; echo $s1 $s2 $v; done > newbeta.txt
+
+# Result
+head newbeta.txt 
+P12002_101 P12002_102 0.315
+P12002_101 P12002_103 0.673
+P12002_101 P12002_104 0.413
+P12002_101 P12002_105 0.653
+P12002_101 P12002_106 0.497
+P12002_101 P12002_107 0.277
+P12002_101 P12002_108 0.454
+P12002_101 P12002_109 0.729
+P12002_101 P12002_110 0.353
+P12002_101 P12002_111 0.256
+```
+A matrix was built base on this beta diversity results to contrusct the heatmap. In order to use this code on your own computer, you have to change the working directory. Your directory must have the required files.
+```r
+# Set working directory
+setwd("/set/your/own/working/directory")
+
+# Load library, you may want to install them with install.package()
+library(dplyr)
+library(circlize)
+library(ComplexHeatmap)
+
+# Load data
+data <- read.table("newbeta.txt")
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
+
+# Prepare to construct matrix
+metadata <- metadata %>%
+  arrange(pop)
+
+# Change label
+metadata <- metadata %>%
+  group_by(pop) %>%
+  mutate(new_pop = paste0(pop, "_", sprintf("%02d", row_number()))) # Add a new column name "new_name" with value of pop and count number 
+
+# Make new_data by merging the original data with the meta data
+new_data <- merge(data, metadata, by.x = "V1", by.y = "sample_id", all.x = TRUE)
+new_data <- merge(new_data, metadata, by.x = "V2", by.y = "sample_id", all.x = TRUE)
+
+# Select the required columns in the desired order
+new_data <- new_data[, c("new_pop.x", "new_pop.y", "V3")]
+
+# Rename the columns
+colnames(new_data) <- c("V1", "V2", "V3")
+
+# Extract unique sample names
+sample_names <- sort(unique(c(new_data$V1, new_data$V2)))
+
+# Create an empty matrix
+# Dimensions based on the length of the sample_names vector. 
+# The matrix is initialized with zeros.
+matrix_data <- matrix(0, nrow = length(sample_names), ncol = length(sample_names))
+
+# Fill in the matrix with values from the third column
+# The for loop iterates over each row of the data data frame:
+for (i in 1:nrow(new_data)) { 
+  # Finds the index of the V1 value in the sample_names vector and assigns it to row_index
+  row_index <- match(new_data$V1[i], sample_names)
+  # Finds the index of the V2 value in the sample_names vector and assigns it to col_index
+  col_index <- match(new_data$V2[i], sample_names)
+  # Assigns the value from the V3 column of data to the corresponding position in matrix_data.
+  matrix_data[row_index, col_index] <- new_data$V3[i]
+  # Set symmetrical value
+  matrix_data[col_index, row_index] <- new_data$V3[i]  
+}
+
+# Transposes the matrix to a symmetrical matrix
+matrix_data <- t(matrix_data)
+
+# Set row and column names
+rownames(matrix_data) <- sample_names
+colnames(matrix_data) <- sample_names
+
+# Transform to matrix
+df <- as.data.frame(matrix_data)
+df$row <- rownames(matrix_data)
+
+# Reshape the data to long format
+df_long <- reshape2::melt(df, id.vars = "row")
+
+# Plot the heatmap using ggplot
+norm_heat <- ggplot(df_long, aes(x = variable, y = row, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = "white", high = "#534b7e") +
+  theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+  labs(fill = "Beta diversity") + xlab("") + ylab("")
+
+# Clustering heatmap + dendogram
+col_fun = colorRamp2(c(0, 0.8), c("white", "#534b7e"))
+heat_dendo <- Heatmap(matrix_data,
+        clustering_distance_rows = "euclidean",
+        heatmap_legend_param = list(
+          title = "Beta diveristy",
+          labels = c(0,0.2,0.4,0.6,0.8)),
+        col = col_fun,
+        row_names_gp = gpar(fontsize = 8),
+        column_names_gp = gpar(fontsize = 8))
+
+# Save plot
+ggsave(plot = norm_heat, filename = "norm_heat.pdf", height = 11, width = 12)
+
+# heat_dendo was saved differently because can't use ggsave, have not figured out why
+pdf("heat_dendo.pdf",width = 12, height = 11)
+draw(heat_dendo)
+dev.off()
+```
+### 3. PCA
+Construct PCA data for plotting, with 3 different filter parameters:
+1. Species appeared in at least one sample
+2. Species appeared in at least 30% of samples
+3. Species appeared in at least 50% of samples
+```r
+# Set working directory
+setwd("/set/your/own/working/directory")
+
+# Load library, you may want to install them with install.package()
+library(tidyverse)
+library(dplyr)
+library(tibble)
+library(ggplot2)
+library(DESeq2)
+library(RColorBrewer)
+library(ggpubr)
+
+# Functions
+# Function 1: Merge data function
+merge_data_funciton <- function(dir){
+  setwd(dir)
+  # Take the directory that contains the bracken files
+  # Put the names of the files into a list
+  files <- list.files(dir)
+  # Manually handle the first file
+  merge_data <- read.table(files[1], header=TRUE, sep='\t') # Read file
+  name <- sub("\\..*", "", files[1]) # Change column name
+  colnames(merge_data)[2] <- name
+  
+  # Set the first data frame as a variable for the loop
+  # merge_data <- one
+  for (i in 2:length(files)){ # Loop through the files
+    temp_data <- read.table(files[i], header=TRUE, sep='\t') # Read the df
+    colnames(temp_data)[2] <- sub("\\..*", "", files[i]) # Change column name
+    merge_data <- merge(merge_data, temp_data, all.x = TRUE, all.y = TRUE) # Merge
+  }
+  return(merge_data)
+}
+
+# Function 2: Find rows of species that need to be removed
+removed <- function(percentage, dat, thres) {
+  to_be_removed <- c()
+  for (i in 1:nrow(dat)) {
+    if (sum(dat[i, ] <= thres) >= ((1-percentage) * ncol(dat))) { # Here we count the number of 0 instead of species, so have to 1 - percentage
+      to_be_removed <- c(to_be_removed, i)
+    }
+  }
+  return(to_be_removed)
+}
+
+# Function 3: Remove the rows from data
+clean_data <- function(vec,dat){
+  if (length(vec)>0){
+    for (i in 1:length(vec)){
+      dat <- dat[-rev(vec)[i],]
+    }
+  }
+  return(dat)
+}
+
+# Load data
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
+
+# Merge data
+merge_data <- merge_data_funciton("/directory/to/folder/of/bracken")
+
+# Replace NA in ORIGINAL DATA with 0
+raw_counts_matrix <- merge_data %>% 
+  mutate(across(where(is.numeric), ~replace_na(.x, 0))) %>% # Replace NA with 0
+  column_to_rownames("name") %>% #Change to first column (label as name) to the row name
+  as.matrix()
+
+# PCA 1: Original + log2
+PCA1 <- log2(raw_counts_matrix +1)
+
+# PCA 2: 30%
+PCA2 <- log2(clean_data(vec = removed( percentage = 0.3, dat = raw_counts_matrix, thres = 0),
+                        dat = raw_counts_matrix) + 1)
+
+# PCA 3: 50%
+PCA3 <- log2(clean_data(vec = removed( percentage = 0.5, dat = raw_counts_matrix, thres = 0),
+                        dat = raw_counts_matrix) + 1)
+
+# RUN PCA
+plotPCA <- function(PCA,x1,x2,y1,y2){ #Take PCA data and xlim and ylim value for aesthetic
+  PCA.scaled_log_counts <- prcomp(t(PCA), scale. = F, center = T)
+  
+  PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
+    rownames_to_column(var = "Principal Component")
+  
+  PCA.data.frame <- (as.data.frame(PCA.scaled_log_counts$x)) %>%
+    rownames_to_column(var = "sample_id") %>% 
+    left_join(metadata, by = "sample_id") 
+  
+  first <- ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
+    xlim(x1, x2) + ylim(y1, y2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant)) +
+    scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+    geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange)) +
+    scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+    scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
+    theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
+    facet_grid(~transect)
+  
+  second <- ggplot(PCA.data.frame, aes(x = PC2, y = PC3)) +
+    xlim(x1, x2) + ylim(y1, y2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant)) +
+    scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+    geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
+    scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+    scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
+    theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
+    facet_grid(~transect)
+  
+  # Arrange two plots
+  final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
+  
+  return(final)
+}
+# The number are only for aesthetic of the plot (the xlim and ylim)
+PCA1_plot <- plotPCA(PCA1, -70, 60, -70, 25)
+PCA2_plot <- plotPCA(PCA2, -40, 50, -25, 25)
+PCA3_plot <- plotPCA(PCA3, -40, 40, -20, 25)
+
+#Save plot
+ggsave(plot = PCA1_plot, filename = "0.pdf", height = 5, width = 8)
+ggsave(plot = PCA2_plot, filename = "30.pdf", height = 5, width = 8)
+ggsave(plot = PCA3_plot, filename = "50.pdf", height = 5, width = 8)
 ```
 
 

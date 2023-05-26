@@ -1,3 +1,5 @@
+
+
 # Load packages
 library(tidyverse)
 library(dplyr)
@@ -7,7 +9,7 @@ library(DESeq2)
 library(RColorBrewer)
 library(ggpubr)
 
-drm(list=ls())
+rm(list=ls())
 # Input 1: metadata
 metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
 
@@ -67,16 +69,75 @@ raw_counts_matrix <- merge_data %>%
 # PCA 1: Original + log2
 PCA1 <- log2(raw_counts_matrix +1)
 
-# PCA 2: exclude columns with >50% 0s.
+# PCA 2: exclude columns with more than 30% is 0
 
-PCA2 <- log2(clean_data(vec = removed( percentage = 0.5, dat = raw_counts_matrix, thres = 0),
+PCA2 <- log2(clean_data(vec = removed( percentage = 0.3, dat = raw_counts_matrix, thres = 0),
                         dat = raw_counts_matrix) + 1)
 
-# PCA 3: exclude columns with more than 30%
-PCA3 <- log2(clean_data(vec = removed( percentage = 0.3, dat = raw_counts_matrix, thres = 0),
+# PCA 3: exclude columns with more than 50% is 0
+PCA3 <- log2(clean_data(vec = removed( percentage = 0.5, dat = raw_counts_matrix, thres = 0),
                         dat = raw_counts_matrix) + 1)
 
 # RUN PCA
+plotPCA <- function(PCA,x1,x2,y1,y2){
+  PCA.scaled_log_counts <- prcomp(t(PCA), scale. = F, center = T)
+  
+  PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
+    rownames_to_column(var = "Principal Component")
+  
+  PCA.data.frame <- (as.data.frame(PCA.scaled_log_counts$x)) %>%
+    rownames_to_column(var = "sample_id") %>% 
+    left_join(metadata, by = "sample_id") 
+  
+  first <- ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
+    xlim(x1, x2) + ylim(y1, y2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_point(size = 3, stroke = 1.25, aes(shape = pop, color = hostplant))+
+    scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+    geom_point(pch = 21,stroke = 0, size = 1.5, aes(fill = hostrange))+
+    scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+    scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
+    theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
+    facet_grid(~transect)
+  
+  second <- ggplot(PCA.data.frame, aes(x = PC2, y = PC3)) +
+    xlim(x1, x2) + ylim(y1, y2) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    geom_hline(yintercept = 0, linetype = "dashed") +
+    geom_point(size = 3, stroke = 1.25, aes(shape = pop, color = hostplant))+
+    scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+    geom_point(pch = 21,stroke = 0, size = 1.5, aes(fill = hostrange))+
+    scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+    scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
+    theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
+    facet_grid(~transect)
+  
+  final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
+  
+  return(final)
+}
+# The number are only for aesthetic of the plot (the xlim and ylim)
+PCA1_plot <- plotPCA(PCA1, -70, 60, -70, 25)
+PCA2_plot <- plotPCA(PCA2, -40, 50, -25, 25)
+PCA3_plot <- plotPCA(PCA3, -40, 40, -20, 25)
+
+#Save plot
+ggsave(plot = PCA1_plot, filename = "0.pdf", height = 8, width = 10)
+ggsave(plot = PCA2_plot, filename = "30.pdf", height = 8, width = 10)
+ggsave(plot = PCA3_plot, filename = "50.pdf", height = 8, width = 10)
+
+# Bar plot of principle component and proportion of variance
+ggplot(PCA.summary[1:6,], 
+       aes( x= `Principal Component`, y = `Proportion of Variance`)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Principal component", "Prop. of variance") +
+  geom_label(stat = "identity", aes(label = round(`Proportion of Variance`, 3))) +
+  theme_classic(base_size = 15)
+
+
+# Unwanted stuffs
+#####
 PCA.scaled_log_counts <- prcomp(t(PCA3), scale. = F, center = T)
 
 PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
@@ -92,30 +153,30 @@ first <- ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
   xlim(-40,50) + ylim(-25,25) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(size = 2, stroke = 1.25, aes(shape = hostplant, color = pop))+
-  geom_point(pch = 21,stroke = 0, size = 1, aes(fill = hostrange))+
-  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFD300", "#A65628", "#F781BF"), name = "Populaiton")+
-  scale_shape_manual(values = c(1,2), name = "Host Plant") +
+  geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant))+
+  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+  geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
+  scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
   scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
-  theme_minimal(base_size = 12) + theme(legend.position = "bottom") + 
+  theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
   facet_grid(~transect)
 
 second <- ggplot(PCA.data.frame, aes(x = PC2, y = PC3)) +
   #xlim(-70,60) + ylim(-70,25)+ #0%
   #xlim(-40,40) + ylim(-20,25)+ #50%
-  xlim(-40,50) + ylim(-25,25) + #30%
+  xlim(-40,50) + ylim(-25,25) +
   geom_vline(xintercept = 0, linetype = "dashed") +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(size = 2, stroke = 1.25, aes(shape = hostplant, color = pop))+
-  geom_point(pch = 21,stroke=0, size = 1, aes(fill = hostrange))+
-  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00", "#FFD300", "#A65628", "#F781BF"), name = "Populaiton")+
-  scale_shape_manual(values = c(1,2), name = "Host Plant") +
-  scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"),name = "Host Range") +
-  theme_minimal(base_size = 12) + theme(legend.position = "bottom") + 
+  geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant))+
+  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+  geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
+  scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+  scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
+  theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
   facet_grid(~transect)
 
-ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
-
+final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
+ggsave(plot = final, filename = "/Users/hy/Documents/GitHub/30.pdf", height = 5, width = 8)
 
 ggplot(PCA.summary[1:6,], 
                       aes( x= `Principal Component`, y = `Proportion of Variance`)) +
@@ -125,6 +186,20 @@ ggplot(PCA.summary[1:6,],
   theme_classic(base_size = 15)
 
 
+
+ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
+  #xlim(-70,60) + ylim(-70,25)+ #0%
+  #xlim(-40,40) + ylim(-20,25)+ #50%
+  xlim(-40,50) + ylim(-25,25) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant))+
+  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
+  geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
+  scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+  scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
+  theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
+  facet_grid(~transect)
 
 
 
