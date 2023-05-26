@@ -89,6 +89,8 @@ mkdir kraken
 mkdir kraken_combined
 mkdir bracken
 mkdir bracken_filtered
+mkdir bracken_F
+mkdir bracken_F_filtered
 mkdir diversity_result
 ```
 These following directories were made in order to have more organised working place.
@@ -271,10 +273,10 @@ conda install bracken=2.8
 # -t is threshold, need at least 10 similar results to classify it as a species
 ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l S -r 100 -t 10 -o ../bracken/$name.bracken ; done
 
-# Run level Family
+# level Family
 module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l F -r 100 -t 10 -o ../bracken_F/$name.bracken ; done
 
-#Genus
+# level Genus
 module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l G -r 100 -t 10 -o ../bracken_G/$name.bracken ; done
 ```
 ### Filter bracken's results
@@ -291,13 +293,16 @@ The KrakenTools' filtering process was estimated to take at least 1 minutes to r
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_filtered/$name.bracken_filtered --exclude 9606 ; done
 
 # Family
-ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../../bracken_F_filtered/$name.bracken_filtered --exclude 9604 ; done
+ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_F_filtered/$name.bracken_filtered --exclude 9604 ; done
+
+# Genus
+ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_G_filtered/$name.bracken_filtered --exclude 9605 ; done
+
 
 # Genus include wolbachia
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_F_filtered/$name.bracken_filtered --include 953 ; done
 
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_Wolbachia_filtered/$name.bracken_filtered --include $wol ; done
-
 
 #Filter out only wolbachia
 wol=$(ls | while read file; do cat $file | grep "Wolbachia" | cut -f 2 | sort | uniq| tr "\n" " "; done); ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_wolbachia_filtered/$name.bracken_wol_filtered --include $wol --exclude 9606 ; done
@@ -312,7 +317,13 @@ This script was run directly in the *bracken_filtered* directory. This scripts t
 # 3. Count the total of line except for the header (the number of lines represent the richness)
 # 4. Output the name and count into a file called species_count.txt
 
-ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../species_count.txt
+ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../diversity_result/species_count.txt
+
+# Family
+ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../diversity_result/family_count.txt
+
+# Genus
+ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../diversity_result/genus_count.txt
 ```
 
 ### Shannon's alpha diversity
@@ -324,6 +335,12 @@ Calculate Shannon's alpha diversity using KrakenTools (*alpha_diversity.py*). Th
 # 3. Calculate alpha diversity, cut the result to have only the wanted information.
 # 4. Write results in shannon_alpha.txt
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha.txt
+
+# For bracken result in family level
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha_F.txt
+
+# Genus
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha_G.txt
 ```
 ### Inverse Simpson's alpha diversity
 The script *alpha_inverse_simpson.sh* was run in *bracken_filtered* directory. See the scripts *alpha_inverse_simpson.sh* for more information.\
@@ -334,6 +351,12 @@ Calculate inverse Simpson's diversity using KrakenTools (*alpha_diversity.py*). 
 # 3. Calculate alpha diversity, cut the result to have only the wanted information.
 # 4. Write results in inverse_simpson_alpha.txt
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file -a ISi | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha.txt
+
+# For bracken result in family level
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha_F.txt
+
+# Genus
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha_G.txt
 ```
 ### Beta diversity
 Create all possible combination of 2 of the filtered bracken files for calculating beta diversity.
@@ -355,6 +378,12 @@ The script *beta_diversity.sh* was run in *bracken_filtered* directory. See the 
 Calculate inverse beta diversity using KrakenTools (*beta_diversity.py*). The calculating process took at least 8 minutes to run on the server.
 ```bash
 cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
+
+# For bracken results at level Family
+cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta_F.txt
+
+# For bracken results at level Genus
+cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta_G.txt
 ```
 ## 7. Data analysis & visualisaiton
 
@@ -438,7 +467,7 @@ ggsave(plot = alpha2_plot, filename = "inv_simp_diversity.pdf", height = 6, widt
 ```
 
 ### 2. Beta diversity
-The raw *beta.txt* result is kinda messy so run this code in bash to take only the information we want.
+The raw *beta.txt* result is kinda messy so run this code in **bash** to take only the information we want.
 ```bash
 head beta.txt
 #0 P12002_101.bracken_filtered (136408 reads) #1 P12002_102.bracken_filtered (102099 reads) x 0 1 0 0.000 0.315 1 x.xxx 0.000
@@ -567,6 +596,33 @@ Construct PCA data for plotting, with 3 different filter parameters:
 1. Species appeared in at least one sample
 2. Species appeared in at least 30% of samples
 3. Species appeared in at least 50% of samples
+
+With bracken results, we only interested in the estimated reads, so we gonna filtered out the bracken_filtered data one more time before running analysis in **bash**. This code was run in the folder that has the bracken_filtered files.
+```bash
+# Original file
+head P12002_101.bracken_filtered 
+
+name	taxonomy_id	taxonomy_lvl	kraken_assigned_reads	added_reads	new_est_reads	fraction_total_reads
+Staphylococcus haemolyticus	1283	S	8441	17879	26320	0.1929505601
+Ralstonia solanacearum	305	S	10812	7557	18369	0.1346621899
+Nonlabens sp. MB-3u-79	2058134	S	822	16060	16882	0.1237610697
+Flammeovirga sp. MY04	1191459	S	12048	287	12335	0.0904272477
+Paenalkalicoccus suaedae	2592382	S	6464	1860	8324	0.0610228139
+
+# Clean the file
+# A new directory outside the folder that has the bracken_filtered results must be made, for demonstration I name it "new_bracken_folder"
+ls | while read file; do cat $file | cut -f 1,6 > ../new_bracken_folder/$file; done
+
+# Result
+head P12002_101.bracken_filtered
+
+name	new_est_reads
+Staphylococcus haemolyticus	26320
+Ralstonia solanacearum	18369
+Nonlabens sp. MB-3u-79	16882
+Flammeovirga sp. MY04	12335
+Paenalkalicoccus suaedae	8324
+```
 ```r
 # Set working directory
 setwd("/set/your/own/working/directory")
@@ -696,9 +752,6 @@ ggsave(plot = PCA1_plot, filename = "0.pdf", height = 5, width = 8)
 ggsave(plot = PCA2_plot, filename = "30.pdf", height = 5, width = 8)
 ggsave(plot = PCA3_plot, filename = "50.pdf", height = 5, width = 8)
 ```
-
-
-ls | while read file; do cat $file | cut -f 1,6 > ../copy_local_2/$file; done
 
 
 
