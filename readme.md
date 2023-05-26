@@ -363,8 +363,8 @@ Three main analysis will be done, including:
 Required files: *shannon_alpha.txt* and *inverse_simpson_alpha.txt* in the *diveristy_result* directory.
 2. Beta diversity\
 Required files: *beta.txt* in the *diversity_result* directory.
-3. PCA
-Required files: 96 bracken filtered files in the *bracken_filtered* directory.\
+3. PCA\
+Required files: 96 bracken filtered files in the *bracken_filtered* directory.
 
 Those files were copied to local computer using [scp](https://linuxize.com/post/how-to-use-scp-command-to-securely-transfer-files/) and the following data analysis and visualisation are mainly done in R except where noted.\
 Additionally, a *all.pops.metadata.tsv* file that has all the information of the sample inculding host plant, transect, population and host range, is used for this part.

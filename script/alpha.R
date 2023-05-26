@@ -8,9 +8,9 @@ library(dyplr)
 
 # Load required data
 metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
-count <- read.table("species_count.txt",col.names = c("sample_id","richness"))
-alpha1 <- read.table("shannon_alpha.txt", col.names = c("sample_id","shannon"))
-alpha2 <- read.table("inverse_simpson_alpha.txt", col.names = c("sample_id","inverse_simpson"))
+count <- read.table("genus_count.txt",col.names = c("sample_id","richness"))
+alpha1 <- read.table("shannon_alpha_G.txt", col.names = c("sample_id","shannon"))
+alpha2 <- read.table("inverse_simpson_alpha_G.txt", col.names = c("sample_id","inverse_simpson"))
 
 # Join with the metadata
 count_join <- (count) %>%
@@ -25,7 +25,7 @@ richness <- ggplot(count_join, aes(x=pop,y=richness, color=hostplant, shape=host
   scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
   geom_boxplot(outlier.shape = NA) + theme_bw() +
   xlab("Population") + ylab("Richness") +
-  facet_grid(~transect, scales = "free") +
+  facet_grid(~transect, scales = "free") + 
   theme(legend.position = "bottom") +
   geom_jitter(width = 0.1)
 

@@ -357,8 +357,12 @@ sample1=$(echo "$line" | sed -n 's/.* #0 \([^[:space:]]*\)\..*/\1/p')
 done < your_file.txt
 
 
+shannon_alpha_F.txt
+
+
+shannon_alpha_species_F.txt
 Old wd
-> /proj/snic2022-6-377/Projects/Tconura/working/Huy/test
+> /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/bracken_wolbachia_filtered  .
 
 New wd
 > /proj/naiss2023-22-412/projects/microbiome/working/Hy/test

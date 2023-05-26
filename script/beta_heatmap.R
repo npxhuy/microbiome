@@ -8,7 +8,7 @@ library(circlize)
 library(ComplexHeatmap)
 
 # Load data
-data <- read.table("newbeta.txt")
+data <- read.table("newbeta_F.txt")
 metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
 
 # Prepare to construct matrix

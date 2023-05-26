@@ -35,7 +35,7 @@ merge_data_funciton <- function(dir){
   }
   return(merge_data)
 }
-merge_data <- merge_data_funciton("/Users/hy/Documents/GitHub/bracken")
+merge_data <- merge_data_funciton("/Users/hy/Documents/GitHub/new_bracken_G_filtered")
 
 # Function 2: Find rows of species that need to be removed
 removed <- function(percentage, dat, thres) {
@@ -118,9 +118,12 @@ plotPCA <- function(PCA,x1,x2,y1,y2){
   return(final)
 }
 # The number are only for aesthetic of the plot (the xlim and ylim)
-PCA1_plot <- plotPCA(PCA1, -70, 60, -70, 25)
-PCA2_plot <- plotPCA(PCA2, -40, 50, -25, 25)
-PCA3_plot <- plotPCA(PCA3, -40, 40, -20, 25)
+PCA1_plot <- plotPCA(PCA1, -40, 40, -25, 25)
+PCA1_plot
+PCA2_plot <- plotPCA(PCA2, -40, 40, -25, 25)
+PCA2_plot
+PCA3_plot <- plotPCA(PCA3, -30, 30, -25, 25)
+PCA3_plot
 
 #Save plot
 ggsave(plot = PCA1_plot, filename = "0.pdf", height = 8, width = 10)
