@@ -35,7 +35,7 @@ merge_data_funciton <- function(dir){
   }
   return(merge_data)
 }
-merge_data <- merge_data_funciton("/Users/hy/Documents/GitHub/new_bracken_G_filtered")
+merge_data <- merge_data_funciton("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/PCA/species")
 
 # Function 2: Find rows of species that need to be removed
 removed <- function(percentage, dat, thres) {
@@ -93,10 +93,10 @@ plotPCA <- function(PCA,x1,x2,y1,y2){
     xlim(x1, x2) + ylim(y1, y2) +
     geom_vline(xintercept = 0, linetype = "dashed") +
     geom_hline(yintercept = 0, linetype = "dashed") +
-    geom_point(size = 3, stroke = 1.25, aes(shape = pop, color = hostplant))+
+    geom_point(size = 2, stroke = 1.25, aes(shape = pop, color = hostplant))+
     scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
-    geom_point(pch = 21,stroke = 0, size = 1.5, aes(fill = hostrange))+
-    scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+    geom_point(pch = 21,stroke = 0, size = 1, aes(fill = hostrange))+
+    scale_shape_manual(values = c(0,1,15,16,2,18,5,17), name = "Population") +
     scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
     theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
     facet_grid(~transect)
@@ -105,30 +105,42 @@ plotPCA <- function(PCA,x1,x2,y1,y2){
     xlim(x1, x2) + ylim(y1, y2) +
     geom_vline(xintercept = 0, linetype = "dashed") +
     geom_hline(yintercept = 0, linetype = "dashed") +
-    geom_point(size = 3, stroke = 1.25, aes(shape = pop, color = hostplant))+
+    geom_point(size = 2, stroke = 1.25, aes(shape = pop, color = hostplant))+
     scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
-    geom_point(pch = 21,stroke = 0, size = 1.5, aes(fill = hostrange))+
-    scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
+    geom_point(pch = 21,stroke = 0, size = 1, aes(fill = hostrange))+
+    scale_shape_manual(values = c(0,1,15,16,2,18,5,17), name = "Population") +
     scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
     theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
     facet_grid(~transect)
   
-  final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
+  final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, labels = "AUTO", legend = "bottom")
   
   return(final)
 }
 # The number are only for aesthetic of the plot (the xlim and ylim)
-PCA1_plot <- plotPCA(PCA1, -40, 40, -25, 25)
+PCA1_plot <- plotPCA(PCA1, -60, 60, -75, 40)
 PCA1_plot
-PCA2_plot <- plotPCA(PCA2, -40, 40, -25, 25)
+PCA2_plot <- plotPCA(PCA2, -20, 20, -20, 25)
 PCA2_plot
-PCA3_plot <- plotPCA(PCA3, -30, 30, -25, 25)
+PCA3_plot <- plotPCA(PCA3, -20, 20, -20, 20)
 PCA3_plot
 
+
+
+
+#FAMILY
+#PCA1_plot <- plotPCA(PCA1, -20, 20, -20, 40)
+#PCA1_plot
+#PCA2_plot <- plotPCA(PCA2, -20, 20, -20, 25)
+#PCA2_plot
+#PCA3_plot <- plotPCA(PCA3, -20, 20, -20, 20)
+#PCA3_plot
+
+
 #Save plot
-ggsave(plot = PCA1_plot, filename = "0.pdf", height = 8, width = 10)
-ggsave(plot = PCA2_plot, filename = "30.pdf", height = 8, width = 10)
-ggsave(plot = PCA3_plot, filename = "50.pdf", height = 8, width = 10)
+ggsave(plot = PCA1_plot, filename = "0.pdf", height = 4, width = 12)
+ggsave(plot = PCA2_plot, filename = "30.pdf", height = 4, width = 12)
+ggsave(plot = PCA3_plot, filename = "50.pdf", height = 4, width = 12)
 
 # Bar plot of principle component and proportion of variance
 ggplot(PCA.summary[1:6,], 

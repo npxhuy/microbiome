@@ -29,7 +29,7 @@ Description: Trimming and filtering sequencing read.\
 Installation: Available on UPPMAX's resources, but can be installed using **conda**
 > conda install -c bioconda trimmomatic=0.39
 
-Author's note: I do not recommend to install through conda because it's more complicated when run the program, download the [package](https://github.com/usadellab/Trimmomatic/releases) and call the package when running the trimming process is more logical for me at least.
+Author's note: I do not recommend to install through conda because it's more complicated when run the program in my experiecne, download the [package](https://github.com/usadellab/Trimmomatic/releases) and call the package when running the trimming process is more logical for me at least.
 ## FastQC
 Version: [0.11.9](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/)\
 Description: Quality control tool for high throughput sequencing data.\
@@ -37,7 +37,7 @@ Installation: Available on UPPMAX's resources, but can be installed using **cond
 >conda install -c bioconda fastqc=0.11.9
 ## MultiQC
 Version: [1.12](https://github.com/ewels/MultiQC)\
-Description:\
+Description: Aggregating and visualizing quality control results from multiple FastQC.\
 Installation: Available on UPPMAX's resources, but can be installed using **conda**
 > conda install -c bioconda multiqc=1.12
 ## Kraken2
@@ -51,7 +51,7 @@ Installation: Clone from [github](https://github.com/jenniferlu717/KrakenTools)
 > git clone https://github.com/jenniferlu717/KrakenTools
 ## Bracken
 Version: [2.8](https://github.com/jenniferlu717/Bracken)\
-Description: \
+Description: Estimating the abundance of species in metagenomic samples \
 Installation: Installed using **conda**
 > conda install bracken=2.8
 ## R & R Studio
@@ -172,6 +172,7 @@ module load bioinfo-tools trimmomatic/0.39
 # 3. Loop through each pair, cut and set and other stuff to have the name of the output for trimmomatic
 # 4. Do trimmomatic for each pair and put the output in trimm folder
 # 5. cd out when finish with one folder
+# Note: using TruSeq3-PE.fa as an adapter file containing the adapter sequences to be trimmed
 ls | while read folder; do cd $folder; ls | paste - - | while read pair; do pair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_paired.fastq/'); unpair1=$(echo $pair | cut -d ' ' -f 1 | sed 's/.fastq/_unpaired.fastq/'); pair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_paired.fastq/'); unpair2=$(echo $pair | cut -d ' ' -f 2 | sed 's/.fastq/_unpaired.fastq/'); java -jar $TRIMMOMATIC_ROOT/trimmomatic-0.39.jar PE -threads 10 $pair ../../trimm/$folder/$pair1 ../../trimm/$folder/$unpair1 ../../trimm/$folder/$pair2 ../../trimm/$folder/$unpair2 ILLUMINACLIP:$TRIMMOMATIC_ROOT/adapters/TruSeq3-PE.fa:2:30:10:2:True SLIDINGWINDOW:4:15 LEADING:3 TRAILING:3 MINLEN:36; done; cd ..; done
 ```
 ## 3. FastQC and MultiQC.
