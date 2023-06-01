@@ -1,5 +1,5 @@
 # Set working directory
-setwd("/Users/hy/Documents/GitHub") 
+setwd("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/alpha/family") 
 
 # Load library, you may have to install them first using install.package()
 library(lme4)
@@ -7,10 +7,10 @@ library(tidyverse)
 library(dyplr)
 
 # Load required data
-metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
-count <- read.table("genus_count.txt",col.names = c("sample_id","richness"))
-alpha1 <- read.table("shannon_alpha_G.txt", col.names = c("sample_id","shannon"))
-alpha2 <- read.table("inverse_simpson_alpha_G.txt", col.names = c("sample_id","inverse_simpson"))
+metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
+count <- read.table("family_count.txt",col.names = c("sample_id","richness"))
+alpha1 <- read.table("shannon_alpha_F.txt", col.names = c("sample_id","shannon"))
+alpha2 <- read.table("inverse_simpson_alpha_F.txt", col.names = c("sample_id","inverse_simpson"))
 
 # Join with the metadata
 count_join <- (count) %>%
@@ -37,13 +37,14 @@ alpha1_plot <- ggplot(alpha1_join, aes(x=pop,y=shannon, color=hostplant, shape=h
   theme(legend.position = "bottom") +
   geom_jitter(width = 0.1)
 
-alpha2_plot <- ggplot(alpha2_join, aes(x=pop,y=inverse_simpson, color=hostplant)) +
+alpha2_plot <- ggplot(alpha2_join, aes(x=pop,y=inverse_simpson, color=hostplant, shape=hostrange)) +
   scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
   geom_boxplot(outlier.shape = NA) + theme_bw() +
-  facet_grid(~transect, scales = "free")+
   xlab("Population") + ylab("Inverse Simpson Diveristy") +
+  facet_grid(~transect, scales = "free") +
   theme(legend.position = "bottom") +
   geom_jitter(width = 0.1)
+
 
 # Saving plot
 ggsave(plot = richness, filename = "richness.pdf", height = 6, width = 7)

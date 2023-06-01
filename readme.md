@@ -269,16 +269,13 @@ conda install bracken=2.8
 
 # Parameter's explanation: 
 # -d is database, same database when using to run Kraken
-# -l is level, S stands for Species
+# -l is level, F stands for Family, S stands for Species
 # -r is reading frame, since the multiqc report give the average length is from 100 to 150, we take 100
-# -t is threshold, need at least 10 similar results to classify it as a species
+# -t is threshold, need at least 10 similar results to classify it as a family
 ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l S -r 100 -t 10 -o ../bracken/$name.bracken ; done
 
 # level Family
 module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l F -r 100 -t 10 -o ../bracken_F/$name.bracken ; done
-
-# level Genus
-module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l G -r 100 -t 10 -o ../bracken_G/$name.bracken ; done
 ```
 ### Filter bracken's results
 The script *bracken_filtered.sh* was run in *bracken* directory. See the scripts *bracken_filtered.sh* for more information.\
@@ -290,23 +287,11 @@ The KrakenTools' filtering process was estimated to take at least 1 minutes to r
 # 3. Run KrakenTools on the bracken results
 
 # Parameter's explanation:
-# --exclude 9606: exclude anything that mapped to human sequences (taxonomic id 9606), which is our only metazoan representative
+# --exclude 9604 and --exclude 9606: exclude anything that mapped to human sequences (taxonomic id at family and species level respectively), which is our only metazoan representative
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_filtered/$name.bracken_filtered --exclude 9606 ; done
 
 # Family
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_F_filtered/$name.bracken_filtered --exclude 9604 ; done
-
-# Genus
-ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_G_filtered/$name.bracken_filtered --exclude 9605 ; done
-
-
-# Genus include wolbachia
-ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_F_filtered/$name.bracken_filtered --include 953 ; done
-
-ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_Wolbachia_filtered/$name.bracken_filtered --include $wol ; done
-
-#Filter out only wolbachia
-wol=$(ls | while read file; do cat $file | grep "Wolbachia" | cut -f 2 | sort | uniq| tr "\n" " "; done); ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_wolbachia_filtered/$name.bracken_wol_filtered --include $wol --exclude 9606 ; done
 ```
 ## 6. Richness & DiversityTools (KrakenTools - alpha_diversity.py & beta_diversity.py)
 ### Richness
@@ -354,13 +339,10 @@ Calculate inverse Simpson's diversity using KrakenTools (*alpha_diversity.py*). 
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file -a ISi | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha.txt
 
 # For bracken result in family level
-ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha_F.txt
-
-# Genus
-ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha_G.txt
+ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file -a ISi | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha_F.txt
 ```
 ### Beta diversity
-Create all possible combination of 2 of the filtered bracken files for calculating beta diversity.
+Create all possible combination of 2 of the filtered bracken files for calculating beta diversity. Run in *bracken_filtered* directory.
 ```bash
 # 1. Store all files names in an array
 # 2. Run a nested for loop to iterate over all possible combinations of two files in the files array. The outer loop iterates over the indices of the first file in each pair, while the inner loop iterates over the indices of the second file in each pair. The range of the inner loop starts from the index of the outer loop plus one to avoid duplicate pairs.
@@ -378,13 +360,15 @@ files=($(ls)) ;for (( i=0; i<${#files[@]}; i++ )); do for (( j=i+1; j<${#files[@
 The script *beta_diversity.sh* was run in *bracken_filtered* directory. See the scripts *beta_diversity.sh* for more information.\
 Calculate inverse beta diversity using KrakenTools (*beta_diversity.py*). The calculating process took at least 8 minutes to run on the server.
 ```bash
-cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
-
 # For bracken results at level Family
 cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta_F.txt
 
-# For bracken results at level Genus
-cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta_G.txt
+# For bracken results at level Species
+cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
+
+
+
+
 ```
 ## 7. Data analysis & visualisaiton
 

@@ -17,4 +17,16 @@
 #
 #  Write bash script below
 
+# 1. Loop through the bracken results
+# 2. Sed the name of the file for naming the output
+# 3. Run KrakenTools on the bracken results
+
+# Parameter's explanation:
+# --exclude 9604 and --exclude 9606: exclude anything that mapped to human sequences (taxonomic id at family and species level respectively), which is our only metazoan representative
+
+# Exclude human at family level
+ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_F_filtered/$name.bracken_filtered --exclude 9604 ; done
+
+
+# Exclude human at species level
 ls | while read bracken; do name=$(echo $bracken | sed 's/\.bracken$//'); python ../tools/KrakenTools/filter_bracken.out.py -i $bracken -o ../bracken_filtered/$name.bracken_filtered --exclude 9606 ; done

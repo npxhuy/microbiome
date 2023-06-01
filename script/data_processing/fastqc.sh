@@ -17,6 +17,9 @@
 #
 #  Write bash script below
 
+# Load module on UPPMAX
 module load bioinfo-tools FastQC/0.11.9
 
-ls | while read folder; do cd $folder; ls | while read file; do fastqc -o ../../fastqc/$folder $file ; done;  cd ..; done
+# 1. Ls of folder and cd in each folder
+# 2. Fastqc for every file, -o flag for output directory
+ls | while read folder; do cd $folder; ls | while read file; do fastqc -t 2 -o ../../fastqc/$folder $file ; done;  cd ..; done
