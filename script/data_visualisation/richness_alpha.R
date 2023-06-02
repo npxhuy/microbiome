@@ -1,16 +1,15 @@
 # Set working directory
-setwd("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/alpha/family") 
+setwd("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/alpha/species") 
 
 # Load library, you may have to install them first using install.package()
 library(lme4)
 library(tidyverse)
-library(dyplr)
 
 # Load required data
 metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
-count <- read.table("family_count.txt",col.names = c("sample_id","richness"))
-alpha1 <- read.table("shannon_alpha_F.txt", col.names = c("sample_id","shannon"))
-alpha2 <- read.table("inverse_simpson_alpha_F.txt", col.names = c("sample_id","inverse_simpson"))
+count <- read.table("species_count.txt",col.names = c("sample_id","richness"))
+alpha1 <- read.table("shannon_alpha.txt", col.names = c("sample_id","shannon"))
+alpha2 <- read.table("inverse_simpson_alpha.txt", col.names = c("sample_id","inverse_simpson"))
 
 # Join with the metadata
 count_join <- (count) %>%
@@ -46,32 +45,13 @@ alpha2_plot <- ggplot(alpha2_join, aes(x=pop,y=inverse_simpson, color=hostplant,
   geom_jitter(width = 0.1)
 
 
-# Saving plot
-ggsave(plot = richness, filename = "richness.pdf", height = 6, width = 7)
-ggsave(plot = alpha1_plot, filename = "shannon_diversity.pdf", height = 6, width = 7)
-ggsave(plot = alpha2_plot, filename = "inv_simp_diversity.pdf", height = 6, width = 7)
+# Saving plot richness
+ggsave(plot = richness, filename = "richness.pdf", height = 3.5, width = 5.5)
 
+# Combine alpha and save
 
-# Lm in population: no sig diff
-lm1 <- lm(shannon~pop,alpha1_join)
-summary(lm1)
+combine <- ggarrange(alpha1_plot, alpha2_plot, ncol = 1,nrow = 2, common.legend = TRUE, labels = "AUTO", legend = "bottom")
 
-# Lm in hostplant, sig diff
-lm11 <- lm(shannon~hostplant,alpha1_join)
-summary(lm11)
+ggsave(plot = combine, filename = "combine_alpha_F.pdf", height = 7, width = 5.5)
 
-# Lm in transect, no sig diff
-lm111 <- lm(shannon~hostrange,alpha1_join)
-summary(lm111)
-
-# Same as above for inverse simpson
-
-lm2 <- lm(inverse_simpson~pop,alpha2_join)
-summary(lm2)
-
-lm22 <- lm(inverse_simpson~hostplant,alpha2_join)
-summary(lm22)
-
-lm222 <- lm(inverse_simpson~transect,alpha2_join)
-summary(lm222)
 

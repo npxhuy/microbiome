@@ -35,7 +35,7 @@ merge_data_funciton <- function(dir){
   }
   return(merge_data)
 }
-merge_data <- merge_data_funciton("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/PCA/species")
+merge_data <- merge_data_funciton("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/PCA/family")
 
 # Function 2: Find rows of species that need to be removed
 removed <- function(percentage, dat, thres) {
@@ -216,5 +216,23 @@ ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
   theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
   facet_grid(~transect)
 
+
+
+## Bar plot variance
+barplot_variance <- function(PCA){
+  PCA.scaled_log_counts <- prcomp(t(PCA), scale. = F, center = T)
+  
+  PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
+    rownames_to_column(var = "Principal Component")
+  
+  final_plot <- ggplot(PCA.summary[1:10,], 
+         aes( x= `Principal Component`, y = `Proportion of Variance`)) +
+    geom_bar(stat = "identity") +
+    labs(x = "Principal component", "Prop. of variance") +
+    geom_label(stat = "identity", aes(label = round(`Proportion of Variance`, 3))) +
+    theme_classic(base_size = 15)
+  return(final_plot)
+}
+barplot_variance(PCA2)
 
 

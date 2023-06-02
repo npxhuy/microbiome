@@ -37,14 +37,19 @@ anova(S_isi6)
 S_isi7 <- lm(inverse_simpson ~ hostplant, data = full_isi_S)
 anova(S_isi7)
 
-AIC(S_isi1, S_isi2, S_isi3, S_isi4, S_isi5, S_isi6, S_isi7)
-BIC(S_isi1, S_isi2, S_isi3, S_isi4, S_isi5, S_isi6, S_isi7)
+# drop everything
+S_isi8 <- lm(inverse_simpson ~ 1, data = full_isi_S)
+
+AIC(S_isi1, S_isi2, S_isi3, S_isi4, S_isi5, S_isi6, S_isi7, S_isi8)
+BIC(S_isi1, S_isi2, S_isi3, S_isi4, S_isi5, S_isi6, S_isi7, S_isi8)
 anova(S_isi2, S_isi1)
 anova(S_isi3, S_isi2)
 anova(S_isi4, S_isi3)
 anova(S_isi5, S_isi4)
 anova(S_isi6, S_isi5)
 anova(S_isi7, S_isi6)
+anova(S_isi8, S_isi7)
+
 ###
 
 # S_F
@@ -78,19 +83,23 @@ anova(S_shan5)
 S_shan6 <- lm(shannon ~ transect + hostplant, data = full_shannon_S)
 anova(S_shan6)
 
-# dorp transect
+# drop transect
 S_shan7 <- lm(shannon ~  hostplant, data = full_shannon_S)
 anova(S_shan7)
 
+# drop everything
+S_shan8 <- lm(shannon ~  1, data = full_shannon_S)
 
-AIC(S_shan1, S_shan2, S_shan3, S_shan4, S_shan5, S_shan6, S_shan7)
-BIC(S_shan1, S_shan2, S_shan3, S_shan4, S_shan5, S_shan6, S_shan7)
+
+AIC(S_shan1, S_shan2, S_shan3, S_shan4, S_shan5, S_shan6, S_shan7, S_shan8)
+BIC(S_shan1, S_shan2, S_shan3, S_shan4, S_shan5, S_shan6, S_shan7, S_shan8)
 anova(S_shan2, S_shan1)
 anova(S_shan3, S_shan2)
 anova(S_shan4, S_shan3)
 anova(S_shan5, S_shan4)
 anova(S_shan6, S_shan5)
 anova(S_shan7, S_shan6)
+anova(S_shan8, S_shan7)
 
 ###
 #Richness Species
@@ -126,12 +135,20 @@ anova(S_count6)
 S_count7 <- lm(count ~ hostrange, data = full_count_S)
 anova(S_count7)
 
+# drop everything
+S_count8 <- lm(count ~ 1, data = full_count_S)
+anova(S_count8)
 
-AIC(S_count1, S_count2, S_count3, S_count4, S_count5, S_count6, S_count7)
-BIC(S_count1, S_count2, S_count3, S_count4, S_count5, S_count6, S_count7)
+
+
+AIC(S_count1, S_count2, S_count3, S_count4, S_count5, S_count6, S_count7, S_count8)
+BIC(S_count1, S_count2, S_count3, S_count4, S_count5, S_count6, S_count7, S_count8)
 anova(S_count2, S_count1)
 anova(S_count3, S_count2)
 anova(S_count4, S_count3)
 anova(S_count5, S_count4)
 anova(S_count6, S_count5)
 anova(S_count7, S_count6)
+anova(S_count8, S_count7)
+
+print(S_count7)

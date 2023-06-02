@@ -41,6 +41,11 @@ anova(F_isi4, F_isi3)
 anova(F_isi5, F_isi4)
 anova(F_isi6, F_isi5)
 
+print(F_isi5)
+anova(F_isi5)
+
+print(F_shan5)
+anova(F_shan5)
 ###
 
 # S_F
