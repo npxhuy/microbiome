@@ -8,7 +8,7 @@ library(ggpubr)
 
 rm(list=ls())
 # Input 1: metadata
-metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE) # Change it to the absolute directory to the tsv file instead
 
 # Input 2: bracken result
 

@@ -1,20 +1,3 @@
-# Deadline and tracking hand-in files  and other important stuffs (to be deleted later)
-## PRESENTATION DAY: 14 June
-## -> SUBMISSION: 7 June
-## Readme
-1. Introduction to software
-2. Pipeline of analysis
-## Report
-1. Abstract 
->  may re-use some infomations the old abstract for the application
-2. Introduction 
-> may re-use some writing from the application as well
-3. Material & methods
-> list out the software packages and step by step of performing the pipeline
-4. Resutls
-5. Conclusion
-6. Ack
-7. Ref
 # Author's note
 This project was mainly done in the server UPPMAX (except from data analysis & visualisation). Most of the applications/packages/softwares were already installed on the server, except where noted.\
 When running code on UPPMAX's server, when using certain software (Kraken2 to be specific), code written in multiple lines had problem running, thus the codes/scripts here were all written as one long line of code to avoid having problem when running on the server. It was not the best way to demonstrate and keep track of code but that was the best bet to run codes/scripts normally on UPPMAX.
@@ -60,22 +43,12 @@ Description: Data analysis & visualisation.\
 Installation: Visit the link above for requirments and tutorial of installation.
 * * * 
 # Pipeline of analysis
-**NOTE**  
-Add a link tree of the working directory at (1).\
-Add absolute working dir on uppmax at (2)\
 * * *
-My file tree of my repository on the server could be found [here](). (1)\
-The absolute path to the working directory on the UPPMAX's server is: (2)\
-The absolute path to the raw data on UPPMAX's server is: 
->/proj/snic2022-6-377/Projects/Tconura/data/WGS/rawdata/
-
 In order to sucessufully follow this analysis, you must:
 - Following strictly to the naming of directory, subdirectory, naming format, ect.
 - Installing every software that was stated.
 - To receive similar outcome, same version of software should be used.
 ## 1. Setting working directory & data.
-**NOTE**\
-Add more directory as the pipeline goes on!!!.
 * * *
 The following directories were created in the current working directory, using *mkdir*.
 ```bash
@@ -271,11 +244,13 @@ conda install bracken=2.8
 # -d is database, same database when using to run Kraken
 # -l is level, F stands for Family, S stands for Species
 # -r is reading frame, since the multiqc report give the average length is from 100 to 150, we take 100
-# -t is threshold, need at least 10 similar results to classify it as a family
+# -t is threshold, need at least 10 similar results to classify it as a family/species
+
+# level Specices
 ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l S -r 100 -t 10 -o ../bracken/$name.bracken ; done
 
 # level Family
-module load conda; source conda_init.sh; conda activate /proj/snic2022-6-377/Projects/Tconura/working/Huy/test/env/microbiome ; ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l F -r 100 -t 10 -o ../bracken_F/$name.bracken ; done
+ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken -d /sw/data/Kraken2_data/prebuilt/k2_pluspf_20221209/ -i $report -l F -r 100 -t 10 -o ../bracken_F/$name.bracken ; done
 ```
 ### Filter bracken's results
 The script *bracken_filtered.sh* was run in *bracken* directory. See the scripts *bracken_filtered.sh* for more information.\
@@ -307,11 +282,7 @@ ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file
 
 # Family
 ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../diversity_result/family_count.txt
-
-# Genus
-ls | while read file; do name=$(echo $file| cut -d "." -f 1)  ;count=$(cat $file | grep -v "new_est_reads" |  wc -l); echo $name $count; done > ../diversity_result/genus_count.txt
 ```
-
 ### Shannon's alpha diversity
 The script *alpha_shannon.sh* was run in *bracken_filtered* directory. See the scripts *alpha_shannon.sh* for more information.\
 Calculate Shannon's alpha diversity using KrakenTools (*alpha_diversity.py*). The calculating process took at least 1 minutes to run on the server.
@@ -324,9 +295,6 @@ ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../
 
 # For bracken result in family level
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha_F.txt
-
-# Genus
-ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha_G.txt
 ```
 ### Inverse Simpson's alpha diversity
 The script *alpha_inverse_simpson.sh* was run in *bracken_filtered* directory. See the scripts *alpha_inverse_simpson.sh* for more information.\
@@ -365,10 +333,6 @@ cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTool
 
 # For bracken results at level Species
 cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTools/DiversityTools/beta_diversity.py -i $pair --type bracken); echo $result; done >> ../diversity_result/beta.txt
-
-
-
-
 ```
 ## 7. Data analysis & visualisaiton
 
@@ -740,5 +704,58 @@ ggsave(plot = PCA2_plot, filename = "30.pdf", height = 5, width = 8)
 ggsave(plot = PCA3_plot, filename = "50.pdf", height = 5, width = 8)
 ```
 
+### 4. Hierarchical model
+Find the most fitting model. The initial model includes all the factors, and we cut the factors out of the model base on the ANOVA result of that model. If a factor or a combination of factors was to be insignificant, it will be cut out of the model.
+The *model_family.R* and *model_species.R* show all the code for running model, here is an example of finding the most fitting model of Inverse Simpson's alpha diversity on Family level.
+```r
+setwd("/set/your/working/directory")
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
+
+# Inverse Simpson Family
+isi_F <- read_table("inverse_simpson_alpha_F.txt", 
+                        col_names= c("sample_id", "inverse_simpson"), 
+                        col_types = "cd")
+
+full_isi_F <- full_join(metadata, isi_F) # Combine with metadata
+
+# Initial model
+F_isi1 <- lm(inverse_simpson ~ hostplant*transect*hostrange, data = full_isi_F)
+anova(F_isi1) # Base on the anova result of this, we decided what to drop on the next model, and continued to do so for the rest
+
+# drop 3way interaction
+F_isi2 <- lm(inverse_simpson ~ hostplant*transect + hostplant*hostrange + transect*hostrange, data = full_isi_F)
+anova(F_isi2)
+
+# drop hostplant*transect
+F_isi3 <- lm(inverse_simpson ~  hostplant*hostrange + transect*hostrange, data = full_isi_F)
+anova(F_isi3)
+
+# drop hostplant*hostrange
+F_isi4 <- lm(inverse_simpson ~ hostplant + transect*hostrange, data = full_isi_F)
+anova(F_isi4)
+
+# drop hostplant
+F_isi5 <- lm(inverse_simpson ~  transect*hostrange, data = full_isi_F)
+anova(F_isi5)
+
+# drop transect * host range
+F_isi6 <- lm(inverse_simpson ~  transect + hostrange, data = full_isi_F)
+anova(F_isi6) # F_isi5 appeared to be the most fitting model but we still drop it down another level for comparision
+
+# AIC and BIC score
+AIC(F_isi1, F_isi2, F_isi3, F_isi4, F_isi5, F_isi6)
+BIC(F_isi1, F_isi2, F_isi3, F_isi4, F_isi5, F_isi6)
+
+# Compare between models to have F score, df, and p value
+anova(F_isi2, F_isi1)
+anova(F_isi3, F_isi2)
+anova(F_isi4, F_isi3)
+anova(F_isi5, F_isi4)
+anova(F_isi6, F_isi5)
+
+# This model is the most suitable, so look into that model
+print(F_isi5)
+anova(F_isi5)
+```
 
 

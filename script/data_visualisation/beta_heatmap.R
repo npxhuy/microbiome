@@ -1,6 +1,6 @@
 rm(list=ls())
 # Set working directory
-setwd("/Users/hy/Documents/GitHub")
+setwd("/set/your/working/directory")
 
 # Load library, you may want to install them 
 library(dplyr)
@@ -8,8 +8,8 @@ library(circlize)
 library(ComplexHeatmap)
 
 # Load data
-data <- read.table("newbeta.txt")
-metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
+data <- read.table("newbeta.txt") #Name of beta count might be different, feel free to change it
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
 
 # Prepare to construct matrix
 metadata <- metadata %>%
@@ -62,16 +62,6 @@ colnames(matrix_data) <- sample_names
 df <- as.data.frame(matrix_data)
 df$row <- rownames(matrix_data)
 
-# Reshape the data to long format
-df_long <- reshape2::melt(df, id.vars = "row")
-
-# Plot the heatmap using ggplot
-norm_heat <- ggplot(df_long, aes(x = variable, y = row, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient(low = "white", high = "#534b7e") +
-  theme_minimal() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
-  labs(fill = "Beta diversity") + xlab("") + ylab("")
-
 # Clustering heatmap + dendogram
 col_fun = colorRamp2(c(0, 0.8), c("white", "#534b7e"))
 heat_dendo <- Heatmap(matrix_data,
@@ -82,9 +72,6 @@ heat_dendo <- Heatmap(matrix_data,
         col = col_fun,
         row_names_gp = gpar(fontsize = 8),
         column_names_gp = gpar(fontsize = 8))
-
-# Save plot
-ggsave(plot = norm_heat, filename = "norm_heat.pdf", height = 11, width = 12)
 
 # heat_dendo was save differently because cant use ggsave, have not figured out why
 pdf("heat_dendo.pdf",width = 12, height = 11)
