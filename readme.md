@@ -1,4 +1,8 @@
 # Author's note
+The link to this project is
+> https://github.com/npxhuy/microbiome
+
+This readme file was written in *md* format. If this readme file is read in *pdf* format, I recommend you to visit the [github link](https://github.com/npxhuy/microbiome) to read the *md* format for good experience reading code (please!).\
 This project was mainly done in the server UPPMAX (except from data analysis & visualisation). Most of the applications/packages/softwares were already installed on the server, except where noted.\
 When running code on UPPMAX's server, when using certain software (Kraken2 to be specific), code written in multiple lines had problem running, thus the codes/scripts here were all written as one long line of code to avoid having problem when running on the server. It was not the best way to demonstrate and keep track of code but that was the best bet to run codes/scripts normally on UPPMAX.
 # Introduction to software which would be used in this pipeline
@@ -254,6 +258,7 @@ ls | while read report; do name=$(echo $report | sed 's/\.reports$//'); bracken 
 ```
 ### Filter bracken's results
 The script *bracken_filtered.sh* was run in *bracken* directory. See the scripts *bracken_filtered.sh* for more information.\
+The following code also include the code for running at Family level. Run it seperately!
 The KrakenTools' filtering process was estimated to take at least 1 minutes to run on the server. 
 ```bash
 # Note: Do not need to batch this on UPPMAX, this task does not take much resources.
@@ -290,7 +295,7 @@ Calculate Shannon's alpha diversity using KrakenTools (*alpha_diversity.py*). Th
 # 1. Loop through the bracken's results
 # 2. Cut the file name for naming
 # 3. Calculate alpha diversity, cut the result to have only the wanted information.
-# 4. Write results in shannon_alpha.txt
+# 4. Write results in txt file
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file | cut -d : -f 2); echo $name $result; done > ../diversity_result/shannon_alpha.txt
 
 # For bracken result in family level
@@ -303,14 +308,15 @@ Calculate inverse Simpson's diversity using KrakenTools (*alpha_diversity.py*). 
 # 1. Loop through the bracken's results
 # 2. Cut the file name for naming
 # 3. Calculate alpha diversity, cut the result to have only the wanted information.
-# 4. Write results in inverse_simpson_alpha.txt
+# 4. Write results in txt file
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file -a ISi | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha.txt
 
 # For bracken result in family level
 ls | while read file; do name=$(echo $file | cut -d . -f 1); result=$(python ../tools/KrakenTools/DiversityTools/alpha_diversity.py -f $file -a ISi | cut -d : -f 2); echo $name $result; done > ../diversity_result/inverse_simpson_alpha_F.txt
 ```
 ### Beta diversity
-Create all possible combination of 2 of the filtered bracken files for calculating beta diversity. Run in *bracken_filtered* directory.
+Create all possible combination of 2 of the filtered bracken files for calculating beta diversity. Run in *bracken_filtered* and directory.\
+Do similar task for *bracken_F_filtered* directory.
 ```bash
 # 1. Store all files names in an array
 # 2. Run a nested for loop to iterate over all possible combinations of two files in the files array. The outer loop iterates over the indices of the first file in each pair, while the inner loop iterates over the indices of the second file in each pair. The range of the inner loop starts from the index of the outer loop plus one to avoid duplicate pairs.
@@ -338,11 +344,11 @@ cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTool
 
 Three main analysis will be done, including:
 1. Alpha diversity\
-Required files: *shannon_alpha.txt* and *inverse_simpson_alpha.txt* in the *diversity_result* directory.
+Required files: *shannon_alpha.txt* and *inverse_simpson_alpha.txt* (for species) and *shannon_alpha_F.txt* and *inverse_simpson_alpha_F.txt* in the *diversity_result* directory.
 2. Beta diversity\
-Required files: *beta.txt* in the *diversity_result* directory.
+Required files: *beta.txt* (for species) and *beta_F.txt* in the *diversity_result* directory.
 3. PCA\
-Required files: 96 bracken filtered files in the *bracken_filtered* directory.
+Required files: 96 bracken filtered files in both the *bracken_filtered* and *bracken_F_filtered* directory.
 
 Those files were copied to local computer using [scp](https://linuxize.com/post/how-to-use-scp-command-to-securely-transfer-files/) and the following data analysis and visualisation are mainly done in R except where noted.\
 Additionally, a *all.pops.metadata.tsv* file that has all the information of the sample inculding host plant, transect, population and host range, is used for this part.
@@ -434,6 +440,7 @@ head beta.txt
 
 # Clean the data
 cat beta.txt | while read line; do s1=$(echo $line | cut -d " " -f 2 | sed 's/\.bracken_filtered$//'); s2=$(echo $line | cut -d " " -f 6 | sed 's/\.bracken_filtered$//'); v=$(echo $line | cut -d " " -f 14) ; echo $s1 $s2 $v; done > newbeta.txt
+# Do the same for beta_F.txt
 
 # Result
 head newbeta.txt 
