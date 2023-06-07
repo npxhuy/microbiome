@@ -8,7 +8,7 @@ library(circlize)
 library(ComplexHeatmap)
 
 # Load data
-data <- read.table("newbeta_F.txt")
+data <- read.table("newbeta.txt")
 metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
 
 # Prepare to construct matrix
@@ -77,7 +77,7 @@ col_fun = colorRamp2(c(0, 0.8), c("white", "#534b7e"))
 heat_dendo <- Heatmap(matrix_data,
         clustering_distance_rows = "euclidean",
         heatmap_legend_param = list(
-          title = "Beta diveristy",
+          title = "Beta diversity",
           labels = c(0,0.2,0.4,0.6,0.8)),
         col = col_fun,
         row_names_gp = gpar(fontsize = 8),

@@ -1,15 +1,14 @@
-setwd("/Users/hy/Documents/GitHub/microbiome/data_analysis/raw_result/alpha/family")
-metadata <- read.table("/Users/hy/Documents/GitHub/all.pops.metadata.tsv",header=TRUE)
+setwd("/set/your/working/directory")
+metadata <- read.table("all.pops.metadata.tsv",header=TRUE)
 
-
-# ISI_F
+# Inverse Simpson Family
 isi_F <- read_table("inverse_simpson_alpha_F.txt", 
                         col_names= c("sample_id", "inverse_simpson"), 
                         col_types = "cd")
 
-full_isi_F <- full_join(metadata, isi_F)
+full_isi_F <- full_join(metadata, isi_F) # Combine with metadata
 
-
+# Initial model
 F_isi1 <- lm(inverse_simpson ~ hostplant*transect*hostrange, data = full_isi_F)
 anova(F_isi1)
 
@@ -33,29 +32,30 @@ anova(F_isi5)
 F_isi6 <- lm(inverse_simpson ~  transect + hostrange, data = full_isi_F)
 anova(F_isi6)
 
+# AIC and BIC score
 AIC(F_isi1, F_isi2, F_isi3, F_isi4, F_isi5, F_isi6)
 BIC(F_isi1, F_isi2, F_isi3, F_isi4, F_isi5, F_isi6)
+
+# Compare between models to have F score, df, and p value
 anova(F_isi2, F_isi1)
 anova(F_isi3, F_isi2)
 anova(F_isi4, F_isi3)
 anova(F_isi5, F_isi4)
 anova(F_isi6, F_isi5)
 
+# This model is the most suitable, so look into that model
 print(F_isi5)
 anova(F_isi5)
 
-print(F_shan5)
-anova(F_shan5)
-###
-
-# S_F
+# Similar for shannon and richness
+# Shannon Family
 shannon_F <- read_table("shannon_alpha_F.txt", 
                         col_names= c("sample_id", "shannon"), 
                         col_types = "cd")
 
 full_shannon_F <- full_join(metadata, shannon_F)
 
-
+# Initial model
 F_shan1 <- lm(shannon ~ hostplant * transect * hostrange, data = full_shannon_F)
 anova(F_shan1)
 
@@ -79,10 +79,20 @@ anova(F_shan5)
 F_shan6 <- lm(shannon ~  transect + hostrange, data = full_shannon_F)
 anova(F_shan6)
 
+# AIC and BIC score
 AIC(F_shan1, F_shan2, F_shan3, F_shan4, F_shan5, F_shan6)
 BIC(F_shan1, F_shan2, F_shan3, F_shan4, F_shan5, F_shan6)
+
+# Compare between models to have F score, df, and p value
 anova(F_shan2, F_shan1)
 anova(F_shan3, F_shan2)
 anova(F_shan4, F_shan3)
 anova(F_shan5, F_shan4)
 anova(F_shan6, F_shan5)
+
+# This model is the most suitable, so look into that model
+print(F_shan5)
+anova(F_shan5)
+
+# Family richness
+

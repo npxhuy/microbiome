@@ -1,12 +1,9 @@
-
-
 # Load packages
 library(tidyverse)
 library(dplyr)
 library(tibble)
 library(ggplot2)
 library(DESeq2)
-library(RColorBrewer)
 library(ggpubr)
 
 rm(list=ls())
@@ -48,7 +45,6 @@ removed <- function(percentage, dat, thres) {
   return(to_be_removed)
 }
 
-#if (sum(dat[i, ] <= thres) >= ((percentage) * ncol(dat))) {
 
 # Function 3: Remove the rows from data
 clean_data <- function(vec,dat){
@@ -115,6 +111,7 @@ plotPCA <- function(PCA,x1,x2,y1,y2){
   
   final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, labels = "AUTO", legend = "bottom")
   
+  
   return(final)
 }
 # The number are only for aesthetic of the plot (the xlim and ylim)
@@ -124,8 +121,6 @@ PCA2_plot <- plotPCA(PCA2, -20, 20, -20, 25)
 PCA2_plot
 PCA3_plot <- plotPCA(PCA3, -20, 20, -20, 20)
 PCA3_plot
-
-
 
 
 #FAMILY
@@ -149,90 +144,3 @@ ggplot(PCA.summary[1:6,],
   labs(x = "Principal component", "Prop. of variance") +
   geom_label(stat = "identity", aes(label = round(`Proportion of Variance`, 3))) +
   theme_classic(base_size = 15)
-
-
-# Unwanted stuffs
-#####
-PCA.scaled_log_counts <- prcomp(t(PCA3), scale. = F, center = T)
-
-PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
-  rownames_to_column(var = "Principal Component")
-
-PCA.data.frame <- (as.data.frame(PCA.scaled_log_counts$x)) %>%
-  rownames_to_column(var = "sample_id") %>% 
-  left_join(metadata, by = "sample_id") 
-
-first <- ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
-  #xlim(-70,60) + ylim(-70,25)+ #0%
-  #xlim(-40,40) + ylim(-20,25)+ #50%
-  xlim(-40,50) + ylim(-25,25) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant))+
-  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
-  geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
-  scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
-  scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
-  theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
-  facet_grid(~transect)
-
-second <- ggplot(PCA.data.frame, aes(x = PC2, y = PC3)) +
-  #xlim(-70,60) + ylim(-70,25)+ #0%
-  #xlim(-40,40) + ylim(-20,25)+ #50%
-  xlim(-40,50) + ylim(-25,25) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant))+
-  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
-  geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
-  scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
-  scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
-  theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
-  facet_grid(~transect)
-
-final <- ggarrange(first, second, ncol = 2, nrow = 1, common.legend = TRUE, legend = "bottom")
-ggsave(plot = final, filename = "/Users/hy/Documents/GitHub/30.pdf", height = 5, width = 8)
-
-ggplot(PCA.summary[1:6,], 
-                      aes( x= `Principal Component`, y = `Proportion of Variance`)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Principal component", "Prop. of variance") +
-  geom_label(stat = "identity", aes(label = round(`Proportion of Variance`, 3))) +
-  theme_classic(base_size = 15)
-
-
-
-ggplot(PCA.data.frame, aes(x = PC1, y = PC2)) +
-  #xlim(-70,60) + ylim(-70,25)+ #0%
-  #xlim(-40,40) + ylim(-20,25)+ #50%
-  xlim(-40,50) + ylim(-25,25) +
-  geom_vline(xintercept = 0, linetype = "dashed") +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(size = 4, stroke = 1.25, aes(shape = pop, color = hostplant))+
-  scale_color_manual(values = c("#5E548E", "#32936F"), name = "Host Plant")+
-  geom_point(pch = 21,stroke = 0, size = 2, aes(fill = hostrange))+
-  scale_shape_manual(values = c(0,1,15,16,2,17,5,18), name = "Population") +
-  scale_fill_manual(values = c("Allopatric" = "white", "Sympatric" = "black"), name = "Host Range") +
-  theme_minimal(base_size = 12) + theme(legend.position = "bottom",legend.key = element_rect(fill = "lightgrey")) + 
-  facet_grid(~transect)
-
-
-
-## Bar plot variance
-barplot_variance <- function(PCA){
-  PCA.scaled_log_counts <- prcomp(t(PCA), scale. = F, center = T)
-  
-  PCA.summary <- as.data.frame(t((summary(PCA.scaled_log_counts))$importance)) %>% 
-    rownames_to_column(var = "Principal Component")
-  
-  final_plot <- ggplot(PCA.summary[1:10,], 
-         aes( x= `Principal Component`, y = `Proportion of Variance`)) +
-    geom_bar(stat = "identity") +
-    labs(x = "Principal component", "Prop. of variance") +
-    geom_label(stat = "identity", aes(label = round(`Proportion of Variance`, 3))) +
-    theme_classic(base_size = 15)
-  return(final_plot)
-}
-barplot_variance(PCA2)
-
-

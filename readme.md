@@ -374,7 +374,7 @@ cat ../combination.txt | while read pair; do result=$(python ../tools/KrakenTool
 
 Three main analysis will be done, including:
 1. Alpha diversity\
-Required files: *shannon_alpha.txt* and *inverse_simpson_alpha.txt* in the *diveristy_result* directory.
+Required files: *shannon_alpha.txt* and *inverse_simpson_alpha.txt* in the *diversity_result* directory.
 2. Beta diversity\
 Required files: *beta.txt* in the *diversity_result* directory.
 3. PCA\
@@ -396,7 +396,7 @@ P12002_151	CHES	CH	East	Sympatric
 P12002_152	CHES	CH	East	Sympatric
 ```
 ### 1. Alpha diversity
-Plotting box plot to visuallise the alpha diveristy and the richness of samples. In order to use this code on your own computer, you have to change the working directory. Your directory must have the required files.
+Plotting box plot to visuallise the alpha diversity and the richness of samples. In order to use this code on your own computer, you have to change the working directory. Your directory must have the required files.
 ```r
 # Set working directory
 setwd("set/your/own/directory") 
@@ -432,7 +432,7 @@ richness <- ggplot(count_join, aes(x=pop,y=richness, color=hostplant, shape=host
 alpha1_plot <- ggplot(alpha1_join, aes(x=pop,y=shannon, color=hostplant, shape=hostrange)) +
   scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
   geom_boxplot(outlier.shape = NA) + theme_bw() +
-  xlab("Population") + ylab("Shannon Diveristy") +
+  xlab("Population") + ylab("Shannon Diversity") +
   facet_grid(~transect, scales = "free") +
   theme(legend.position = "bottom") +
   geom_jitter(width = 0.1)
@@ -441,14 +441,16 @@ alpha2_plot <- ggplot(alpha2_join, aes(x=pop,y=inverse_simpson, color=hostplant)
   scale_color_manual(values = c("#5E548E", "#32936F"), name = "Hostplant")+
   geom_boxplot(outlier.shape = NA) + theme_bw() +
   facet_grid(~transect, scales = "free")+
-  xlab("Population") + ylab("Inverse Simpson Diveristy") +
+  xlab("Population") + ylab("Inverse Simpson Diversity") +
   theme(legend.position = "bottom") +
   geom_jitter(width = 0.1)
 
-# Saving plot
-ggsave(plot = richness, filename = "richness.pdf", height = 6, width = 7)
-ggsave(plot = alpha1_plot, filename = "shannon_diversity.pdf", height = 6, width = 7)
-ggsave(plot = alpha2_plot, filename = "inv_simp_diversity.pdf", height = 6, width = 7)
+# Saving plot richness
+ggsave(plot = richness, filename = "richness.pdf", height = 3.5, width = 5.5)
+
+# Saving plot alpha diversity
+combine <- ggarrange(alpha1_plot, alpha2_plot, ncol = 1,nrow = 2, common.legend = TRUE, labels = "AUTO", legend = "bottom")
+ggsave(plot = combine, filename = "combine_alpha_F.pdf", height = 7, width = 5.5)
 ```
 
 ### 2. Beta diversity
@@ -562,7 +564,7 @@ col_fun = colorRamp2(c(0, 0.8), c("white", "#534b7e"))
 heat_dendo <- Heatmap(matrix_data,
         clustering_distance_rows = "euclidean",
         heatmap_legend_param = list(
-          title = "Beta diveristy",
+          title = "Beta diversity",
           labels = c(0,0.2,0.4,0.6,0.8)),
         col = col_fun,
         row_names_gp = gpar(fontsize = 8),
