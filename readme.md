@@ -1,10 +1,7 @@
 # Author's note
-The link to this project is
-> https://github.com/npxhuy/microbiome
-
-This readme file was written in *md* format. If this readme file is read in *pdf* format, I recommend you to visit the [github link](https://github.com/npxhuy/microbiome) to read the *md* format for good experience reading code (please!).\
 This project was mainly done in the server UPPMAX (except from data analysis & visualisation). Most of the applications/packages/softwares were already installed on the server, except where noted.\
 When running code on UPPMAX's server, when using certain software (Kraken2 to be specific), code written in multiple lines had problem running, thus the codes/scripts here were all written as one long line of code to avoid having problem when running on the server. It was not the best way to demonstrate and keep track of code but that was the best bet to run codes/scripts normally on UPPMAX.
+
 # Introduction to software which would be used in this pipeline
 ## conda
 Version: [23.3.1](https://docs.conda.io/projects/conda/en/latest/index.html)\
@@ -764,5 +761,8 @@ anova(F_isi6, F_isi5)
 print(F_isi5)
 anova(F_isi5)
 ```
+## 8. Kraken2 Bracken set up.
+### 1. Kraken2
+For Kraken2 to run, you need to 1. install, 2. install/create database, 3. run Kraken2
 
-
+For installation, 
