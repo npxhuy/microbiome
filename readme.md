@@ -2,6 +2,9 @@
 This project was mainly done in the server UPPMAX (except from data analysis & visualisation). Most of the applications/packages/softwares were already installed on the server, except where noted.\
 When running code on UPPMAX's server, when using certain software (Kraken2 to be specific), code written in multiple lines had problem running, thus the codes/scripts here were all written as one long line of code to avoid having problem when running on the server. It was not the best way to demonstrate and keep track of code but that was the best bet to run codes/scripts normally on UPPMAX.
 
+# Report of the project
+See the original report on [Overleaf](https://www.overleaf.com/read/cxnbdzpsfdyj#d75307)
+
 # Introduction to software which would be used in this pipeline
 ## conda
 Version: [23.3.1](https://docs.conda.io/projects/conda/en/latest/index.html)\
